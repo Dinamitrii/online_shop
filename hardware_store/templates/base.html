@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Железария Ковач{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <a href="{{ url_for('index') }}" class="brand">🔧 Железария <span>Ковач</span></a>
+
+        <form class="search-form" action="{{ url_for('search') }}" method="get">
+            <input type="text" name="q" placeholder="Търсене на продукт..." value="{{ q if q else '' }}">
+            <button type="submit">Търси</button>
+        </form>
+
+        <a href="{{ url_for('cart_view') }}" class="cart-link">
+            🛒 Количка
+            {% set cart = session.get('cart', {}) %}
+            {% if cart %}
+                <span class="cart-badge">{{ cart.values() | sum }}</span>
+            {% endif %}
+        </a>
+    </div>
+    <nav class="categories-nav">
+        {% for c in categories %}
+            <a href="{{ url_for('category_view', category_id=c.id) }}">{{ c.name }}</a>
+        {% endfor %}
+    </nav>
+</header>
+
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <p>© 2026 Железария Ковач · Всичко за дома, градината и строежа.</p>
+</footer>
+
+</body>
+</html>

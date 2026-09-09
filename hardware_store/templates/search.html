@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Резултати за "{{ q }}" · Железария Ковач{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Резултати за "{{ q }}"</h1>
+
+{% if products %}
+<div class="product-grid">
+    {% for p in products %}
+    <div class="product-card">
+        <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+            {% if p.image_url %}
+                <img src="{{ p.image_url }}" alt="{{ p.name }}">
+            {% else %}
+                <div class="placeholder-thumb">🔩</div>
+            {% endif %}
+        </a>
+        <div class="product-info">
+            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+            <div class="product-price">{{ '%.2f'|format(p.price) }} лв.</div>
+            <form action="{{ url_for('cart_add', product_id=p.id) }}" method="post">
+                <input type="hidden" name="qty" value="1">
+                <button type="submit" class="btn btn-small">Добави в количката</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-msg">Няма намерени продукти по зададената дума.</p>
+{% endif %}
+{% endblock %}
