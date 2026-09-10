@@ -1,0 +1,55 @@
+{% extends 'admin/base.html' %}
+{% block title %}{% if product %}Редакция на продукт{% else %}Нов продукт{% endif %}{% endblock %}
+
+{% block content %}
+<h1 class="page-title">{% if product %}Редакция: {{ product.name }}{% else %}Нов продукт{% endif %}</h1>
+
+<form method="post" class="admin-form" enctype="multipart/form-data">
+    <label for="name">Име на продукта *</label>
+    <input type="text" id="name" name="name" required
+           value="{{ form.name if form else (product.name if product else '') }}">
+
+    <div class="form-row">
+        <div>
+            <label for="price">Цена (лв.) *</label>
+            <input type="number" id="price" name="price" step="0.01" min="0" required
+                   value="{{ form.price if form else (product.price if product else '') }}">
+        </div>
+        <div>
+            <label for="stock">Наличност *</label>
+            <input type="number" id="stock" name="stock" min="0" required
+                   value="{{ form.stock if form else (product.stock if product is not none else 0) }}">
+        </div>
+    </div>
+
+    <label for="category_id">Категория *</label>
+    <select id="category_id" name="category_id" required>
+        {% for c in categories %}
+        {% set selected_id = (form.category_id | int) if form else (product.category_id if product else None) %}
+        <option value="{{ c.id }}" {% if selected_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="image_file">Снимка на продукта</label>
+
+    {% if product and product.image_url %}
+    <div class="current-image-preview">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+        <label class="remove-image-checkbox">
+            <input type="checkbox" name="remove_image" value="1"> Премахни текущата снимка
+        </label>
+    </div>
+    {% endif %}
+
+    <input type="file" id="image_file" name="image_file" accept=".png,.jpg,.jpeg,.webp,.gif">
+    <small class="field-hint">PNG, JPG, WEBP или GIF, до 5 MB. {% if product and product.image_url %}Ако качиш нова, ще замени текущата.{% endif %}</small>
+
+    <label for="description">Описание</label>
+    <textarea id="description" name="description" rows="4">{{ form.description if form else (product.description if product else '') }}</textarea>
+
+    <div class="admin-form-actions">
+        <button type="submit" class="btn">{% if product %}Запази промените{% else %}Създай продукт{% endif %}</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Отказ</a>
+    </div>
+</form>
+{% endblock %}
