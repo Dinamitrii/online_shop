@@ -1,0 +1,37 @@
+{% extends 'admin/base.html' %}
+{% block title %}Категории{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Категории</h1>
+
+<form method="post" class="admin-inline-form">
+    <input type="text" name="name" placeholder="Име на нова категория" required>
+    <button type="submit" class="btn">+ Добави категория</button>
+</form>
+
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Име</th>
+            <th>Брой продукти</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in categories %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.products | length }}</td>
+            <td class="admin-actions">
+                <form action="{{ url_for('admin_category_delete', category_id=c.id) }}" method="post"
+                      onsubmit="return confirm('Изтриване на категория \'{{ c.name }}\'?');">
+                    <button type="submit" class="btn btn-small btn-danger">Изтрий</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
