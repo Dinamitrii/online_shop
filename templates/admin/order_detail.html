@@ -42,14 +42,14 @@
                 {% for item in order.items %}
                 <tr>
                     <td>{{ item.product_name }}</td>
-                    <td>{{ '%.2f'|format(item.price) }} лв.</td>
+                    <td>{{ '%.2f'|format(item.price) }} €</td>
                     <td>{{ item.qty }}</td>
-                    <td>{{ '%.2f'|format(item.subtotal) }} лв.</td>
+                    <td>{{ '%.2f'|format(item.subtotal) }} €</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div class="cart-total" style="margin-top:12px;">Общо: <strong>{{ '%.2f'|format(order.total) }} лв.</strong></div>
+        <div class="cart-total" style="margin-top:12px;">Общо: <strong>{{ '%.2f'|format(order.total) }} €</strong></div>
     </div>
 </div>
 

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Поръчка · Железария Ковач{% endblock %}
+{% block title %}Поръчка · Железария Дианабад{% endblock %}
 
 {% block content %}
 <h1 class="page-title">Завършване на поръчката</h1>
@@ -25,10 +25,10 @@
         <h2>Обобщение</h2>
         <ul>
             {% for item in items %}
-            <li>{{ item.product.name }} × {{ item.qty }} — {{ '%.2f'|format(item.subtotal) }} лв.</li>
+            <li>{{ item.product.name }} × {{ item.qty }} — {{ '%.2f'|format(item.subtotal) }} €</li>
             {% endfor %}
         </ul>
-        <div class="cart-total">Общо: <strong>{{ '%.2f'|format(total) }} лв.</strong></div>
+        <div class="cart-total">Общо: <strong>{{ '%.2f'|format(total) }} €</strong></div>
     </aside>
 </div>
 {% endblock %}

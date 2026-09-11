@@ -34,7 +34,7 @@
             <td>{{ o.customer_name }}</td>
             <td>{{ o.phone }}</td>
             <td>{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-            <td>{{ '%.2f'|format(o.total) }} лв.</td>
+            <td>{{ '%.2f'|format(o.total) }} €</td>
             <td>
                 <span class="status-badge status-{{ o.status | replace(' ', '-') }}">{{ o.status }}</span>
             </td>

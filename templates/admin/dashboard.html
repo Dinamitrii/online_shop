@@ -40,7 +40,7 @@
             <td>{{ p.id }}</td>
             <td>{{ p.name }}</td>
             <td>{{ p.category.name }}</td>
-            <td>{{ '%.2f'|format(p.price) }} лв.</td>
+            <td>{{ '%.2f'|format(p.price) }} €</td>
             <td class="{% if p.stock <= 5 %}stock-low{% endif %}">{{ p.stock }}</td>
             <td class="admin-actions">
                 <a href="{{ url_for('admin_product_edit', product_id=p.id) }}" class="btn btn-small">Редакция</a>

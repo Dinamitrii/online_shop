@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ product.name }} · Железария Ковач{% endblock %}
+{% block title %}{{ product.name }} · Железария Дианабад{% endblock %}
 
 {% block content %}
 <div class="product-detail">
@@ -15,7 +15,7 @@
             <a href="{{ url_for('category_view', category_id=product.category.id) }}">{{ product.category.name }}</a>
         </p>
         <h1>{{ product.name }}</h1>
-        <div class="product-price product-price-large">{{ '%.2f'|format(product.price) }} лв.</div>
+        <div class="product-price product-price-large">{{ '%.2f'|format(product.price) }} €</div>
         <p class="product-description">{{ product.description }}</p>
 
         {% if product.stock > 0 %}
@@ -48,7 +48,7 @@
         </a>
         <div class="product-info">
             <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
-            <div class="product-price">{{ '%.2f'|format(p.price) }} лв.</div>
+            <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
         </div>
     </div>
     {% endfor %}

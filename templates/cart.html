@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Количка · Железария Ковач{% endblock %}
+{% block title %}Количка · Железария Дианабад{% endblock %}
 
 {% block content %}
 <h1 class="page-title">Вашата количка</h1>
@@ -21,14 +21,14 @@
             <td>
                 <a href="{{ url_for('product_view', product_id=item.product.id) }}">{{ item.product.name }}</a>
             </td>
-            <td>{{ '%.2f'|format(item.product.price) }} лв.</td>
+            <td>{{ '%.2f'|format(item.product.price) }} €</td>
             <td>
                 <form action="{{ url_for('cart_update', product_id=item.product.id) }}" method="post" class="qty-form">
                     <input type="number" name="qty" value="{{ item.qty }}" min="0" max="{{ item.product.stock }}">
                     <button type="submit" class="btn btn-small">Обнови</button>
                 </form>
             </td>
-            <td>{{ '%.2f'|format(item.subtotal) }} лв.</td>
+            <td>{{ '%.2f'|format(item.subtotal) }} €</td>
             <td><a href="{{ url_for('cart_remove', product_id=item.product.id) }}" class="remove-link">Премахни</a></td>
         </tr>
         {% endfor %}
@@ -36,7 +36,7 @@
 </table>
 
 <div class="cart-summary">
-    <div class="cart-total">Общо: <strong>{{ '%.2f'|format(total) }} лв.</strong></div>
+    <div class="cart-total">Общо: <strong>{{ '%.2f'|format(total) }} €</strong></div>
     <a href="{{ url_for('checkout') }}" class="btn">Продължи към поръчка</a>
 </div>
 
