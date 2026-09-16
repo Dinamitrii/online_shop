@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Потвърждение · Железария Ковач{% endblock %}
+
+{% block content %}
+<div class="confirmation-box">
+    <h1>✔ Поръчката е приета!</h1>
+    <p>Номер на поръчка: <strong>#{{ order.id }}</strong></p>
+    <p>Ще се свържем с Вас на телефон <strong>{{ order.phone }}</strong> за потвърждение.</p>
+
+    <h2>Детайли</h2>
+    <ul>
+        {% for item in order.items %}
+        <li>{{ item.product_name }} × {{ item.qty }} — {{ '%.2f'|format(item.subtotal) }} лв.</li>
+        {% endfor %}
+    </ul>
+    <div class="cart-total">Общо: <strong>{{ '%.2f'|format(order.total) }} лв.</strong></div>
+
+    <a href="{{ url_for('index') }}" class="btn">Обратно към началото</a>
+</div>
+{% endblock %}
