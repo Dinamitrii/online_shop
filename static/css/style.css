@@ -1,7 +1,7 @@
 :root {
-    --steel: #1e3fba;
+    --steel: #0623e8;
     --steel-dark: #1f4560;
-    --accent: #f46f51;
+    --accent: #f66444;
     --accent-dark: #8f3e22;
     --highlight: #d9a441;
     --bg: #ede7dc;
@@ -63,14 +63,14 @@ a { color: inherit; text-decoration: none; }
 }
 .brand-text span { color: var(--accent); }
 .brand-logo {
-    height: 68px;
+    height: 52px;
     width: auto;
     border-radius: 4px;
     display: block;
 }
 
 @media (max-width: 600px) {
-    .brand-logo { height: 44px; }
+    .brand-logo { height: 38px; }
 }
 
 .search-form {

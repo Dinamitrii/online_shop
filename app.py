@@ -32,7 +32,7 @@ app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 
 # Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
 # за да не показва браузърът стар кеширан style.css след ъпдейт.
-app.config['ASSET_VERSION'] = '5'
+app.config['ASSET_VERSION'] = '6'
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
