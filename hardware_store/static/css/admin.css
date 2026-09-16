@@ -1,7 +1,7 @@
 /* ---------- Admin layout ---------- */
 
 .admin-body {
-    background: #eef0f2;
+    background: var(--bg);
 }
 
 .admin-topbar {
@@ -67,8 +67,29 @@
     font-size: 14px;
 }
 .admin-table th { background: #f0efec; }
-.admin-actions { display: flex; gap: 8px; }
+.admin-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stock-low { color: var(--danger); font-weight: 700; }
+
+.admin-category-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+.admin-category-thumb-placeholder {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: #f0efec;
+    border-radius: var(--radius);
+}
+.category-image-form input[type="file"] {
+    font-size: 12px;
+    max-width: 140px;
+}
 
 .btn-secondary {
     background: #e2e0dc;
@@ -122,6 +143,34 @@
     margin-top: 18px;
 }
 
+.current-image-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f7f6f4;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+}
+.current-image-preview img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+.remove-image-checkbox {
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.field-hint {
+    color: var(--text-light);
+    font-size: 12px;
+    margin-top: -2px;
+}
+
 /* ---------- Login ---------- */
 
 .login-wrapper {
@@ -151,6 +200,81 @@
     font-size: 14px;
 }
 .login-box .btn { margin-top: 12px; }
+
+/* ---------- Order status ---------- */
+
+.status-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.status-chip {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #e2e0dc;
+    color: var(--text);
+    border: 1px solid transparent;
+}
+.status-chip:hover { background: #d4d1cb; }
+.status-chip-active {
+    background: var(--steel);
+    color: #fff;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-badge.status-нова, .status-chip.status-нова {
+    background: #fdecea; color: var(--danger);
+}
+.status-badge.status-в-обработка, .status-chip.status-в-обработка {
+    background: #fff3e0; color: #b5680a;
+}
+.status-badge.status-изпратена, .status-chip.status-изпратена {
+    background: #e3f0fd; color: #1565c0;
+}
+.status-badge.status-завършена, .status-chip.status-завършена {
+    background: #e5f5e6; color: var(--success);
+}
+.status-badge.status-отказана, .status-chip.status-отказана {
+    background: #eceff1; color: #607d8b;
+}
+.status-chip-active.status-нова { background: var(--danger); color: #fff; }
+.status-chip-active.status-в-обработка { background: #b5680a; color: #fff; }
+.status-chip-active.status-изпратена { background: #1565c0; color: #fff; }
+.status-chip-active.status-завършена { background: var(--success); color: #fff; }
+.status-chip-active.status-отказана { background: #607d8b; color: #fff; }
+
+.status-select-form select {
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+}
+.status-change-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+}
+.status-change-form select {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.stat-link { text-decoration: none; display: block; }
+.stat-link:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
 
 /* ---------- Order detail ---------- */
 

@@ -1,8 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}{{ category.name }} · Железария Ковач{% endblock %}
+{% block title %}{{ category.name }} · Железария Дианабад{% endblock %}
 
 {% block content %}
-<h1 class="page-title">{{ category.name }}</h1>
+<h1 class="page-title category-page-title">
+    {% if category.image_url %}
+        <img src="{{ category.image_url }}" alt="" class="category-title-photo">
+    {% else %}
+        <span>{{ category_icons.get(category.name, '🧰') }}</span>
+    {% endif %}
+    {{ category.name }}
+</h1>
 
 <form class="inline-search" method="get">
     <input type="text" name="q" placeholder="Търсене в {{ category.name }}..." value="{{ q }}">
@@ -22,7 +29,7 @@
         </a>
         <div class="product-info">
             <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
-            <div class="product-price">{{ '%.2f'|format(p.price) }} лв.</div>
+            <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
             <form action="{{ url_for('cart_add', product_id=p.id) }}" method="post">
                 <input type="hidden" name="qty" value="1">
                 <button type="submit" class="btn btn-small">Добави в количката</button>

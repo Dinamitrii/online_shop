@@ -1,26 +1,31 @@
 :root {
-    --steel: #23292f;
-    --steel-dark: #171b1f;
-    --accent: #e8720c;
-    --accent-dark: #c95f07;
-    --bg: #f4f3f1;
+    --steel: #2e407d;
+    --steel-dark: #142838;
+    --accent: #ed6739;
+    --accent-dark: #8f3e22;
+    --highlight: #d9a441;
+    --bg: #ede7dc;
     --card-bg: #ffffff;
-    --border: #e1ded8;
-    --text: #23292f;
-    --text-light: #6b6f73;
-    --success: #2e7d32;
-    --danger: #c62828;
-    --radius: 6px;
+    --border: #ddd4c3;
+    --text: #2a2622;
+    --text-light: #766f62;
+    --success: #4b7a51;
+    --danger: #a23636;
+    --radius: 4px;
 }
 
 * { box-sizing: border-box; }
 
 body {
     margin: 0;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    font-family: 'PT Sans', 'Segoe UI', Roboto, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     line-height: 1.5;
+}
+
+h1, h2, h3, .brand, .hero h1 {
+    font-family: 'Bitter', Georgia, serif;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -123,14 +128,14 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Hero ---------- */
 
 .hero {
-    background: linear-gradient(120deg, var(--steel), var(--steel-dark));
+    background: linear-gradient(120deg, var(--steel), var(--accent-dark));
     color: #fff;
     padding: 40px 30px;
     border-radius: var(--radius);
     margin-bottom: 32px;
 }
 .hero h1 { margin: 0 0 8px; font-size: 26px; }
-.hero p { margin: 0; color: #c7c9cc; }
+.hero p { margin: 0; color: #e8ddd0; }
 
 /* ---------- Sections ---------- */
 
@@ -169,6 +174,30 @@ a { color: inherit; text-decoration: none; }
     color: var(--accent-dark);
 }
 .category-icon { font-size: 26px; margin-bottom: 6px; }
+.category-icon-photo {
+    width: 100%;
+    height: 64px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.category-icon-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.category-page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.category-title-photo {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    object-fit: cover;
+}
 
 /* ---------- Product grid / cards ---------- */
 

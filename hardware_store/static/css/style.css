@@ -1,26 +1,31 @@
 :root {
-    --steel: #23292f;
-    --steel-dark: #171b1f;
-    --accent: #e8720c;
-    --accent-dark: #c95f07;
-    --bg: #f4f3f1;
+    --steel: #1f3a52;
+    --steel-dark: #142838;
+    --accent: #b5502e;
+    --accent-dark: #8f3e22;
+    --highlight: #d9a441;
+    --bg: #ede7dc;
     --card-bg: #ffffff;
-    --border: #e1ded8;
-    --text: #23292f;
-    --text-light: #6b6f73;
-    --success: #2e7d32;
-    --danger: #c62828;
-    --radius: 6px;
+    --border: #ddd4c3;
+    --text: #2a2622;
+    --text-light: #766f62;
+    --success: #4b7a51;
+    --danger: #a23636;
+    --radius: 4px;
 }
 
 * { box-sizing: border-box; }
 
 body {
     margin: 0;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    font-family: 'PT Sans', 'Segoe UI', Roboto, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     line-height: 1.5;
+}
+
+h1, h2, h3, .brand, .hero h1 {
+    font-family: 'Bitter', Georgia, serif;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -94,6 +99,14 @@ a { color: inherit; text-decoration: none; }
     border-radius: 10px;
 }
 
+.contacts-link {
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 14px;
+}
+.contacts-link:hover { color: var(--accent); }
+
 .categories-nav {
     background: var(--steel-dark);
     display: flex;
@@ -115,14 +128,14 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Hero ---------- */
 
 .hero {
-    background: linear-gradient(120deg, var(--steel), var(--steel-dark));
+    background: linear-gradient(120deg, var(--steel), var(--accent-dark));
     color: #fff;
     padding: 40px 30px;
     border-radius: var(--radius);
     margin-bottom: 32px;
 }
 .hero h1 { margin: 0 0 8px; font-size: 26px; }
-.hero p { margin: 0; color: #c7c9cc; }
+.hero p { margin: 0; color: #e8ddd0; }
 
 /* ---------- Sections ---------- */
 
@@ -161,6 +174,30 @@ a { color: inherit; text-decoration: none; }
     color: var(--accent-dark);
 }
 .category-icon { font-size: 26px; margin-bottom: 6px; }
+.category-icon-photo {
+    width: 100%;
+    height: 64px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.category-icon-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.category-page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.category-title-photo {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    object-fit: cover;
+}
 
 /* ---------- Product grid / cards ---------- */
 
@@ -356,6 +393,99 @@ a { color: inherit; text-decoration: none; }
     color: var(--text-light);
     font-size: 13px;
     border-top: 1px solid var(--border);
+}
+
+/* ---------- Контакти ---------- */
+
+.contacts-layout {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.contact-card {
+    flex: 1 1 320px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+}
+.contact-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.contact-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+.contact-icon { font-size: 20px; line-height: 1.4; }
+.contact-label {
+    font-size: 12px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 2px;
+}
+.contact-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+a.contact-value:hover { color: var(--accent-dark); }
+
+.contact-whatsapp-btn {
+    background: #25d366;
+    margin-top: 6px;
+}
+.contact-whatsapp-btn:hover { background: #1ebd5a; }
+
+.contact-map {
+    flex: 1 1 360px;
+    min-height: 320px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+@media (max-width: 700px) {
+    .contacts-layout { flex-direction: column; }
+    .contact-map { min-height: 260px; }
+}
+
+/* ---------- WhatsApp плаващ бутон ---------- */
+
+.whatsapp-float {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 58px;
+    height: 58px;
+    background: #25d366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    z-index: 999;
+    transition: transform .15s, box-shadow .15s;
+}
+.whatsapp-float:hover {
+    transform: scale(1.07);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+    .whatsapp-float {
+        bottom: 16px;
+        right: 16px;
+        width: 52px;
+        height: 52px;
+    }
 }
 
 @media (max-width: 600px) {

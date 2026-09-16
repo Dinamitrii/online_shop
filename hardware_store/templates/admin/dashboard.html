@@ -16,10 +16,10 @@
         <div class="stat-number">{{ low_stock_count }}</div>
         <div class="stat-label">С ниска наличност (≤5)</div>
     </div>
-    <div class="stat-card">
+    <a href="{{ url_for('admin_orders') }}" class="stat-card stat-link {% if new_orders_count %}stat-warning{% endif %}">
         <div class="stat-number">{{ orders_count }}</div>
-        <div class="stat-label">Поръчки</div>
-    </div>
+        <div class="stat-label">Поръчки{% if new_orders_count %} · {{ new_orders_count }} нови{% endif %}</div>
+    </a>
 </div>
 
 {% if products %}
@@ -40,7 +40,7 @@
             <td>{{ p.id }}</td>
             <td>{{ p.name }}</td>
             <td>{{ p.category.name }}</td>
-            <td>{{ '%.2f'|format(p.price) }} лв.</td>
+            <td>{{ '%.2f'|format(p.price) }} €</td>
             <td class="{% if p.stock <= 5 %}stock-low{% endif %}">{{ p.stock }}</td>
             <td class="admin-actions">
                 <a href="{{ url_for('admin_product_edit', product_id=p.id) }}" class="btn btn-small">Редакция</a>

@@ -12,7 +12,13 @@
     <div class="category-grid">
         {% for c in categories %}
         <a class="category-card" href="{{ url_for('category_view', category_id=c.id) }}">
-            <div class="category-icon">📦</div>
+            {% if c.image_url %}
+                <div class="category-icon category-icon-photo">
+                    <img src="{{ c.image_url }}" alt="{{ c.name }}">
+                </div>
+            {% else %}
+                <div class="category-icon">{{ category_icons.get(c.name, '🧰') }}</div>
+            {% endif %}
             <div>{{ c.name }}</div>
         </a>
         {% endfor %}

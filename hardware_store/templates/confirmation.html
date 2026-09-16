@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Потвърждение · Железария Ковач{% endblock %}
+{% block title %}Потвърждение · Железария Дианабад{% endblock %}
 
 {% block content %}
 <div class="confirmation-box">
@@ -10,10 +10,10 @@
     <h2>Детайли</h2>
     <ul>
         {% for item in order.items %}
-        <li>{{ item.product_name }} × {{ item.qty }} — {{ '%.2f'|format(item.subtotal) }} лв.</li>
+        <li>{{ item.product_name }} × {{ item.qty }} — {{ '%.2f'|format(item.subtotal) }} €</li>
         {% endfor %}
     </ul>
-    <div class="cart-total">Общо: <strong>{{ '%.2f'|format(order.total) }} лв.</strong></div>
+    <div class="cart-total">Общо: <strong>{{ '%.2f'|format(order.total) }} €</strong></div>
 
     <a href="{{ url_for('index') }}" class="btn">Обратно към началото</a>
 </div>

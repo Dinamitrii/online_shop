@@ -30,6 +30,10 @@ app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'admin123')
 # WhatsApp номер за бутона за жив чат (код на държава + номер, без + и интервали).
 app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 
+# Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
+# за да не показва браузърът стар кеширан style.css след ъпдейт.
+app.config['ASSET_VERSION'] = '3'
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db.init_app(app)
@@ -37,7 +41,24 @@ db.init_app(app)
 
 @app.context_processor
 def inject_whatsapp_number():
-    return {'whatsapp_number': app.config['WHATSAPP_NUMBER']}
+    return {'whatsapp_number': app.config['WHATSAPP_NUMBER'], 'asset_version': app.config['ASSET_VERSION']}
+
+
+# Emoji fallback за категории без качена снимка (виж admin/categories.html за upload)
+CATEGORY_ICONS = {
+    'Ръчни инструменти': '🔨',
+    'Електроинструменти': '⚡',
+    'Крепежни елементи': '🔩',
+    'Боя и лакове': '🖌️',
+    'Ключалки и брави': '🔒',
+    'Градина': '🌱',
+    'Мазилки и лепила': '🧱',
+}
+
+
+@app.context_processor
+def inject_category_icons():
+    return {'category_icons': CATEGORY_ICONS}
 
 
 def allowed_file(filename):
@@ -428,18 +449,60 @@ def admin_product_delete(product_id):
 def admin_categories():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
+        uploaded_file = request.files.get('image_file')
+
         if not name:
             flash('Името на категорията е задължително.', 'error')
         elif Category.query.filter_by(name=name).first():
             flash('Вече съществува категория с това име.', 'error')
         else:
-            db.session.add(Category(name=name))
+            image_url = ''
+            try:
+                saved = save_uploaded_image(uploaded_file)
+                if saved:
+                    image_url = saved
+            except ValueError as e:
+                flash(str(e), 'error')
+                return redirect(url_for('admin_categories'))
+
+            db.session.add(Category(name=name, image_url=image_url))
             db.session.commit()
             flash(f'Категория "{name}" беше създадена.', 'success')
         return redirect(url_for('admin_categories'))
 
     categories = Category.query.all()
     return render_template('admin/categories.html', categories=categories)
+
+
+@app.route('/admin/categories/<int:category_id>/image', methods=['POST'])
+@admin_required
+def admin_category_image(category_id):
+    category = Category.query.get_or_404(category_id)
+    uploaded_file = request.files.get('image_file')
+    remove_image = request.form.get('remove_image') == '1'
+
+    if remove_image:
+        delete_uploaded_image(category.image_url)
+        category.image_url = ''
+        db.session.commit()
+        flash(f'Снимката на "{category.name}" беше премахната.', 'success')
+        return redirect(url_for('admin_categories'))
+
+    try:
+        saved = save_uploaded_image(uploaded_file)
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('admin_categories'))
+
+    if saved:
+        delete_uploaded_image(category.image_url)
+        category.image_url = saved
+        db.session.commit()
+        flash(f'Снимката на "{category.name}" беше обновена.', 'success')
+    else:
+        flash('Не беше избран файл.', 'error')
+
+    return redirect(url_for('admin_categories'))
 
 
 @app.route('/admin/categories/<int:category_id>/delete', methods=['POST'])
@@ -449,6 +512,7 @@ def admin_category_delete(category_id):
     if category.products:
         flash(f'Не може да изтриете "{category.name}" — все още съдържа продукти.', 'error')
     else:
+        delete_uploaded_image(category.image_url)
         db.session.delete(category)
         db.session.commit()
         flash(f'Категория "{category.name}" беше изтрита.', 'success')
@@ -543,11 +607,14 @@ def seed_data():
         ],
     }
 
-    for cat_name, products in categories_data.items():
-        # Пропускаме категории, които вече съществуват — не пипаме съществуващи данни.
-        if Category.query.filter_by(name=cat_name).first():
-            continue
+    # Зареждаме примерните категории/продукти само при напълно празна база данни
+    # (първо стартиране). Ако вече има поне една категория, приемаме че админът
+    # управлява каталога ръчно — иначе изтрита категория щеше да "възкръсва"
+    # при всеки рестарт на сървъра.
+    if Category.query.first():
+        return
 
+    for cat_name, products in categories_data.items():
         category = Category(name=cat_name)
         db.session.add(category)
         db.session.flush()
@@ -564,9 +631,14 @@ def migrate_db():
     на проекта, ако вече съществува по-стара база данни (store.db)."""
     from sqlalchemy import text
     with db.engine.connect() as conn:
-        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(orders)"))]
-        if 'status' not in cols:
+        order_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(orders)"))]
+        if 'status' not in order_cols:
             conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR(30) DEFAULT 'нова'"))
+            conn.commit()
+
+        category_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(categories)"))]
+        if 'image_url' not in category_cols:
+            conn.execute(text("ALTER TABLE categories ADD COLUMN image_url VARCHAR(300) DEFAULT ''"))
             conn.commit()
 
 

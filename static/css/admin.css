@@ -1,7 +1,7 @@
 /* ---------- Admin layout ---------- */
 
 .admin-body {
-    background: #eef0f2;
+    background: var(--bg);
 }
 
 .admin-topbar {
@@ -67,8 +67,29 @@
     font-size: 14px;
 }
 .admin-table th { background: #f0efec; }
-.admin-actions { display: flex; gap: 8px; }
+.admin-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stock-low { color: var(--danger); font-weight: 700; }
+
+.admin-category-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+.admin-category-thumb-placeholder {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: #f0efec;
+    border-radius: var(--radius);
+}
+.category-image-form input[type="file"] {
+    font-size: 12px;
+    max-width: 140px;
+}
 
 .btn-secondary {
     background: #e2e0dc;

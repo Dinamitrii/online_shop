@@ -2,7 +2,14 @@
 {% block title %}{{ category.name }} · Железария Дианабад{% endblock %}
 
 {% block content %}
-<h1 class="page-title">{{ category.name }}</h1>
+<h1 class="page-title category-page-title">
+    {% if category.image_url %}
+        <img src="{{ category.image_url }}" alt="" class="category-title-photo">
+    {% else %}
+        <span>{{ category_icons.get(category.name, '🧰') }}</span>
+    {% endif %}
+    {{ category.name }}
+</h1>
 
 <form class="inline-search" method="get">
     <input type="text" name="q" placeholder="Търсене в {{ category.name }}..." value="{{ q }}">
