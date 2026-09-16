@@ -1,11 +1,12 @@
 import os
-import uuid
 import secrets
+import uuid
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from gunicorn.app.pasterapp import serve
-from werkzeug.utils import secure_filename
+
 from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.utils import secure_filename
+
 from models import db, Category, Product, Order, OrderItem
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -685,4 +686,4 @@ if __name__ == "__main__":
         db.create_all()
         migrate_db()
         seed_data()
-    serve(app.run(host="0.0.0.0", port=8000))
+    app.run(host="0.0.0.0", port=8000, debug=True)
