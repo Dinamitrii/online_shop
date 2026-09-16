@@ -1,8 +1,8 @@
 :root {
     --steel: #0623e8;
-    --steel-dark: #1f4560;
+    --steel-dark: #031696;
     --accent: #f66444;
-    --accent-dark: #8f3e22;
+    --accent-dark: #bf4e35;
     --highlight: #d9a441;
     --bg: #ede7dc;
     --card-bg: #ffffff;
@@ -451,6 +451,25 @@ a { color: inherit; text-decoration: none; }
 }
 a.contact-value:hover { color: var(--accent-dark); }
 
+.working-hours {
+    border-collapse: collapse;
+    margin-top: 2px;
+}
+.working-hours td {
+    padding: 3px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+.working-hours td:first-child {
+    padding-right: 18px;
+    font-weight: 400;
+    color: var(--text-light);
+}
+.working-hours .closed {
+    color: var(--danger);
+}
+
 .contact-whatsapp-btn {
     background: #25d366;
     margin-top: 6px;
@@ -505,4 +524,3 @@ a.contact-value:hover { color: var(--accent-dark); }
     .topbar-inner { flex-wrap: wrap; }
     .search-form { order: 3; width: 100%; }
 }
-
