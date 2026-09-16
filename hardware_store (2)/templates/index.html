@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Начало · Железария Дианабад{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Всичко за дома, градината и строежа — на едно място</h1>
+    <p>Инструменти, крепежни елементи, боя, ключалки и градинска техника с бърза доставка.</p>
+</section>
+
+<section>
+    <h2 class="section-title">Категории</h2>
+    <div class="category-grid">
+        {% for c in categories %}
+        <a class="category-card" href="{{ url_for('category_view', category_id=c.id) }}">
+            {% if c.image_url %}
+                <div class="category-icon category-icon-photo">
+                    <img src="{{ c.image_url }}" alt="{{ c.name }}">
+                </div>
+            {% else %}
+                <div class="category-icon">{{ category_icons.get(c.name, '🧰') }}</div>
+            {% endif %}
+            <div>{{ c.name }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <h2 class="section-title">Нови продукти</h2>
+    <div class="product-grid">
+        {% for p in featured %}
+        <div class="product-card">
+            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+                {% if p.image_url %}
+                    <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                {% else %}
+                    <div class="placeholder-thumb">🔩</div>
+                {% endif %}
+            </a>
+            <div class="product-info">
+                <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+                <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
+                <form action="{{ url_for('cart_add', product_id=p.id) }}" method="post">
+                    <input type="hidden" name="qty" value="1">
+                    <button type="submit" class="btn btn-small">Добави в количката</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
