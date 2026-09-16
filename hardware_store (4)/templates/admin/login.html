@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход · Админ панел</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ asset_version }}">
+</head>
+<body class="admin-body">
+
+<div class="login-wrapper">
+    <form method="post" class="login-box">
+        <h1>🔧 Админ вход</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <label for="password">Парола</label>
+        <input type="password" id="password" name="password" required autofocus>
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <button type="submit" class="btn">Влез</button>
+    </form>
+</div>
+
+</body>
+</html>
