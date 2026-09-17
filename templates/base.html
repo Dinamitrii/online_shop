@@ -32,7 +32,9 @@
         </a>
 
         <form class="search-form" action="{{ url_for('search') }}" method="get">
-            <input type="text" name="q" placeholder="Търсене на продукт..." value="{{ q if q else '' }}">
+            <label>
+                <input type="text" name="q" placeholder="Търсене на продукт..." value="{{ q if q else '' }}">
+            </label>
             <button type="submit">Търси</button>
         </form>
 
