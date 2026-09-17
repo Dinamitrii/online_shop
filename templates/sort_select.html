@@ -1,0 +1,6 @@
+<label for="sort">Подреди по</label>
+<select id="sort" name="sort">
+    {% for value, label in sort_options.items() %}
+    <option value="{{ value }}" {% if sort == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+</select>
