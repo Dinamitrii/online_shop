@@ -765,19 +765,26 @@ def init_db_command():
 from flask import send_from_directory
 
 
-@app.route('/sitemap.xml', methods=['GET'])
-def sitemap():
-    pages = []
-    # Dynamically add pages
-    sitemap_xml = render_template('sitemap.xml', pages=pages)
-    response = Response(sitemap_xml, mimetype='application/xml')
-    return response
+@app.route("/favicon.ico")
+def favicon():
+    return (url_for('static', filename='images/favicon/favicon.ico'),
+            url_for('static', filename='images/favicon/favicon-16x16.png'),
+            url_for('static', filename='images/favicon/favicon-32x32.png'),
+            url_for('static', filename='images/favicon/android-chrome-192x192.png'),
+            url_for('static', filename='images/favicon/android-chrome-256x256.png'),
+            url_for('static', filename='images/favicon/apple-touch-icon.png'),
+            url_for('static', filename='images/favicon/safari-pinned-tab.svg'),
+            url_for('static', filename='images/favicon/mstile-150x150.png'),
+            url_for('static', filename='images/favicon/browserconfig.xml'),
+            url_for('static', filename='images/favicon/site.webmanifest'))
 
+
+# The code below lets the Flask server respond to crawler request for robots.txt and sitemap files
 
 @app.route('/robots.txt')
-def robots():
-    return Response("User-agent: *\nDisallow: /private", mimetype="text/plain")
-
+@app.route('/sitemap.xml')
+def static_from_root():
+    return send_from_directory(app.static_folder, request.path[1:])
 
 if __name__ == '__main__':
     with app.app_context():
