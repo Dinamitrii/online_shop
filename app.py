@@ -767,16 +767,16 @@ from flask import send_from_directory
 
 @app.route("/favicon.ico")
 def favicon():
-    return (url_for('static', filename='images/favicon/favicon.ico'),
-            url_for('static', filename='images/favicon/favicon-16x16.png'),
-            url_for('static', filename='images/favicon/favicon-32x32.png'),
-            url_for('static', filename='images/favicon/android-chrome-192x192.png'),
-            url_for('static', filename='images/favicon/android-chrome-256x256.png'),
-            url_for('static', filename='images/favicon/apple-touch-icon.png'),
-            url_for('static', filename='images/favicon/safari-pinned-tab.svg'),
-            url_for('static', filename='images/favicon/mstile-150x150.png'),
-            url_for('static', filename='images/favicon/browserconfig.xml'),
-            url_for('static', filename='images/favicon/site.webmanifest'))
+    return (url_for('static', filename='img/favicon/favicon.ico'),
+            url_for('static', filename='img/favicon/favicon-16x16.png'),
+            url_for('static', filename='img/favicon/favicon-32x32.png'),
+            url_for('static', filename='img/favicon/android-chrome-192x192.png'),
+            url_for('static', filename='img/favicon/android-chrome-256x256.png'),
+            url_for('static', filename='img/favicon/apple-touch-icon.png'),
+            url_for('static', filename='img/favicon/safari-pinned-tab.svg'),
+            url_for('static', filename='img/favicon/mstile-150x150.png'),
+            url_for('static', filename='img/favicon/browserconfig.xml'),
+            url_for('static', filename='img/favicon/site.webmanifest'))
 
 
 # The code below lets the Flask server respond to crawler request for robots.txt and sitemap files
