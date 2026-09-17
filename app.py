@@ -784,7 +784,8 @@ def favicon():
 @app.route('/robots.txt')
 @app.route('/sitemap.xml')
 def static_from_root():
-    return send_from_directory(app.send_from_directory, request.path[1:])
+    return send_from_directory(app.static_folder, request.path[1:])
+
 
 if __name__ == '__main__':
     with app.app_context():
