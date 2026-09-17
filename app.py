@@ -5,7 +5,7 @@ import uuid
 import secrets
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_from_directory
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem
 
@@ -758,6 +758,30 @@ def init_db_command():
     migrate_db()
     seed_data()
     print('Базата данни е готова с примерни продукти.')
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return (url_for('static', filename='images/favicon/favicon.ico'),
+            url_for('static', filename='images/favicon/favicon-16x16.png'),
+            url_for('static', filename='images/favicon/favicon-32x32.png'),
+            url_for('static', filename='images/favicon/android-chrome-192x192.png'),
+            url_for('static', filename='images/favicon/android-chrome-256x256.png'),
+            url_for('static', filename='images/favicon/apple-touch-icon.png'),
+            url_for('static', filename='images/favicon/safari-pinned-tab.svg'),
+            url_for('static', filename='images/favicon/mstile-150x150.png'),
+            url_for('static', filename='images/favicon/browserconfig.xml'),
+            url_for('static', filename='images/favicon/site.webmanifest'))
+
+
+# The code below lets the Flask server respond to crawler request for robots.txt and sitemap files
+
+@app.route('/robots.txt')
+@app.route('/sitemap.xml')
+def static_from_root():
+    return send_from_directory(app.static_folder, request.path[1:], mimetype='text/plain')
+
+
 
 
 if __name__ == '__main__':
