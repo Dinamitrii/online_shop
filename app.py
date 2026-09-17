@@ -16,7 +16,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'img', 'products')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_IMAGE_SIZE_MB = 5
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # SECRET_KEY — ако липсва в .env, генерира се случаен (но тогава сесиите/количките
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
