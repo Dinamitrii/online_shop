@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Контакти · Железария Дианабад{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Контакти</h1>
+
+<div class="contacts-layout">
+    <div class="contact-card">
+        <h2>Железария Дианабад</h2>
+
+        <div class="contact-row">
+            <span class="contact-icon">👤</span>
+            <div>
+                <div class="contact-label">Отговорно лице</div>
+                <div class="contact-value">Натали Пенчева</div>
+            </div>
+        </div>
+
+        <div class="contact-row">
+            <span class="contact-icon">📞</span>
+            <div>
+                <div class="contact-label">Телефон</div>
+                <a href="tel:+359876282920" class="contact-value">0876 282 920</a>
+            </div>
+        </div>
+
+        <div class="contact-row">
+            <span class="contact-icon">📍</span>
+            <div>
+                <div class="contact-label">Адрес</div>
+                <div class="contact-value">гр. София, бул. „Драган Цанков“ 59-63, вх. Е, гараж 5</div>
+            </div>
+        </div>
+
+        <div class="contact-row">
+            <span class="contact-icon">🕒</span>
+            <div>
+                <div class="contact-label">Работно време</div>
+                <table class="working-hours">
+                    <tr><td>Понеделник – Петък</td><td>09:00 – 18:00</td></tr>
+                    <tr><td>Събота</td><td>09:00 – 14:00</td></tr>
+                    <tr><td>Неделя</td><td class="closed">Почивен ден</td></tr>
+                </table>
+            </div>
+        </div>
+
+        {% if whatsapp_number %}
+        <a href="https://wa.me/{{ whatsapp_number }}" target="_blank" rel="noopener" class="btn contact-whatsapp-btn">
+            Пишете ни в WhatsApp
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="contact-map">
+        <iframe
+            src="https://www.google.com/maps?q={{ 'гр. София, бул. Драган Цанков 59-63' | urlencode }}&output=embed"
+            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+        </iframe>
+    </div>
+</div>
+{% endblock %}
