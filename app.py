@@ -4,7 +4,7 @@ import io
 import uuid
 import secrets
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem
@@ -784,7 +784,7 @@ def favicon():
 @app.route('/robots.txt')
 @app.route('/sitemap.xml')
 def static_from_root():
-    return send_from_directory(app.static_folder, request.path[1:])
+    return send_from_directory(app.send_from_directory, request.path[1:])
 
 if __name__ == '__main__':
     with app.app_context():
