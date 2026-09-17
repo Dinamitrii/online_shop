@@ -3,6 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Админ панел{% endblock %} · Железария Дианабад</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=PT+Sans:wght@400;700&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ asset_version }}">
+
     <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"/>
 
     <link rel="apple-touch-icon" sizes="180x180"
@@ -20,13 +29,6 @@
     <meta name="msapplication-config" content="static/img/favicon/browserconfig.xml"/>
     <meta name="theme-color" content="#ffffff"/>
 
-    <title>{% block title %}Админ панел{% endblock %} · Железария Дианабад</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=PT+Sans:wght@400;700&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_version }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ asset_version }}">
 </head>
 <body class="admin-body">
 
