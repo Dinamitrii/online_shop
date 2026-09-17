@@ -3,7 +3,7 @@ import uuid
 import secrets
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_from_directory
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem
 
@@ -95,12 +95,14 @@ def delete_uploaded_image(image_url):
 
 def admin_required(view_func):
     """Декоратор, който пази /admin рутовете зад логин."""
+
     @wraps(view_func)
     def wrapper(*args, **kwargs):
         if not session.get('is_admin'):
             flash('Моля, влезте в системата.', 'error')
             return redirect(url_for('admin_login', next=request.path))
         return view_func(*args, **kwargs)
+
     return wrapper
 
 
@@ -147,7 +149,7 @@ def category_view(category_id):
         products_query = products_query.filter(Product.name.ilike(f'%{q}%'))
     products = products_query.all()
     return render_template('category.html', category=category, products=products,
-                            categories=categories, q=q)
+                           categories=categories, q=q)
 
 
 @app.route('/search')
@@ -242,10 +244,10 @@ def checkout():
         if not name or not phone or not address:
             flash('Моля, попълнете име, телефон и адрес.', 'error')
             return render_template('checkout.html', items=items, total=total,
-                                    categories=categories)
+                                   categories=categories)
 
         order = Order(customer_name=name, phone=phone, address=address,
-                       email=email, total=total)
+                      email=email, total=total)
         db.session.add(order)
         db.session.flush()  # за да получим order.id
 
@@ -309,8 +311,8 @@ def admin_dashboard():
     orders_count = Order.query.count()
     new_orders_count = Order.query.filter_by(status='нова').count()
     return render_template('admin/dashboard.html', products=products,
-                            low_stock_count=low_stock_count, orders_count=orders_count,
-                            new_orders_count=new_orders_count)
+                           low_stock_count=low_stock_count, orders_count=orders_count,
+                           new_orders_count=new_orders_count)
 
 
 # ---------------------------- Админ: продукти (CRUD) ----------------------------
@@ -358,11 +360,11 @@ def admin_product_new():
         if error:
             flash(error, 'error')
             return render_template('admin/product_form.html', categories=categories,
-                                    product=None, form=request.form)
+                                   product=None, form=request.form)
 
         product = Product(name=name, price=price, stock=stock,
-                           category_id=category_id, description=description,
-                           image_url=image_url)
+                          category_id=category_id, description=description,
+                          image_url=image_url)
         db.session.add(product)
         db.session.commit()
         flash(f'Продукт "{name}" беше създаден.', 'success')
@@ -408,7 +410,7 @@ def admin_product_edit(product_id):
         if error:
             flash(error, 'error')
             return render_template('admin/product_form.html', categories=categories,
-                                    product=product, form=request.form)
+                                   product=product, form=request.form)
 
         product.name = name
         product.price = price
@@ -530,7 +532,7 @@ def admin_orders():
         query = query.filter_by(status=status_filter)
     orders = query.order_by(Order.created_at.desc()).all()
     return render_template('admin/orders.html', orders=orders,
-                            statuses=Order.STATUSES, status_filter=status_filter)
+                           statuses=Order.STATUSES, status_filter=status_filter)
 
 
 @app.route('/admin/orders/<int:order_id>')
@@ -649,6 +651,28 @@ def init_db_command():
     migrate_db()
     seed_data()
     print('Базата данни е готова с примерни продукти.')
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return (url_for('static', filename='images/favicon/favicon.ico'),
+            url_for('static', filename='images/favicon/favicon-16x16.png'),
+            url_for('static', filename='images/favicon/favicon-32x32.png'),
+            url_for('static', filename='images/favicon/android-chrome-192x192.png'),
+            url_for('static', filename='images/favicon/android-chrome-256x256.png'),
+            url_for('static', filename='images/favicon/apple-touch-icon.png'),
+            url_for('static', filename='images/favicon/safari-pinned-tab.svg'),
+            url_for('static', filename='images/favicon/mstile-150x150.png'),
+            url_for('static', filename='images/favicon/browserconfig.xml'),
+            url_for('static', filename='images/favicon/site.webmanifest'))
+
+
+# The code below lets the Flask server respond to crawler request for robots.txt and sitemap files
+
+@app.route('/robots.txt')
+@app.route('/sitemap.xml')
+def static_from_root():
+    return send_from_directory(app.static_folder, request.path[1:], mimetype='text/plain')
 
 
 if __name__ == '__main__':
