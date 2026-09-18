@@ -4,7 +4,7 @@ deployment:
     # ЗАМЕНИ с реалния абсолютен път до Application root
     # (същата папка, която си въвел/а в Setup Python App).
     # Пример: /home/твоя_cpanel_user/hardware_store
-    - export DEPLOYPATH=/home/ejelezar/repositories/hardware_store
+    - export DEPLOYPATH=/home/ejelezar/repositories/online_shop
 
     # Инсталира/обновява Python зависимостите от requirements.txt
     # във virtualenv-а на приложението (пътят също идва от Setup Python App
