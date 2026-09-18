@@ -20,6 +20,8 @@
 <form class="list-toolbar" method="get">
     {% include 'sort_select.html' %}
     <button type="submit" class="btn btn-small">Подреди</button>
+    <button type="submit" class="btn btn-small" formmethod="post"
+            formaction="{{ url_for('admin_category_order') }}">Запази подредбата в магазина</button>
     <button type="submit" class="btn btn-small" formaction="{{ url_for('admin_categories_export') }}">Експорт CSV</button>
 </form>
 

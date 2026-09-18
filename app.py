@@ -1,4 +1,6 @@
 import os
+import json
+import tempfile
 import csv
 import io
 import uuid
@@ -224,7 +226,7 @@ def csv_download(filename, headers, rows):
 
 @app.route('/')
 def index():
-    categories = Category.query.all()
+    categories = storefront_categories()
     featured = Product.query.order_by(Product.id.desc()).limit(8).all()
     return render_template('index.html', categories=categories, featured=featured)
 
@@ -232,7 +234,7 @@ def index():
 @app.route('/category/<int:category_id>')
 def category_view(category_id):
     category = Category.query.get_or_404(category_id)
-    categories = Category.query.all()
+    categories = storefront_categories()
     q = request.args.get('q', '').strip()
     products_query = Product.query.filter_by(category_id=category.id)
     if q:
@@ -246,7 +248,7 @@ def category_view(category_id):
 @app.route('/search')
 def search():
     q = request.args.get('q', '').strip()
-    categories = Category.query.all()
+    categories = storefront_categories()
     sort = selected_sort(PRODUCT_SORTS)
     products = []
     if q:
@@ -257,14 +259,14 @@ def search():
 
 @app.route('/contacts')
 def contacts():
-    categories = Category.query.all()
+    categories = storefront_categories()
     return render_template('contacts.html', categories=categories)
 
 
 @app.route('/product/<int:product_id>')
 def product_view(product_id):
     product = Product.query.get_or_404(product_id)
-    categories = Category.query.all()
+    categories = storefront_categories()
     related = Product.query.filter(
         Product.category_id == product.category_id,
         Product.id != product.id
@@ -312,7 +314,7 @@ def cart_remove(product_id):
 
 @app.route('/cart')
 def cart_view():
-    categories = Category.query.all()
+    categories = storefront_categories()
     items, total = cart_items_with_products()
     return render_template('cart.html', items=items, total=total, categories=categories)
 
@@ -321,7 +323,7 @@ def cart_view():
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    categories = Category.query.all()
+    categories = storefront_categories()
     items, total = cart_items_with_products()
 
     if not items:
@@ -367,7 +369,7 @@ def checkout():
 @app.route('/order/<int:order_id>/confirmation')
 def order_confirmation(order_id):
     order = Order.query.get_or_404(order_id)
-    categories = Category.query.all()
+    categories = storefront_categories()
     return render_template('confirmation.html', order=order, categories=categories)
 
 
@@ -541,6 +543,43 @@ def admin_product_delete(product_id):
 
 # ---------------------------- Админ: категории ----------------------------
 
+def saved_category_sort():
+    try:
+        with open(os.path.join(BASE_DIR, 'category-order.json'), encoding='utf-8') as f:
+            value = json.load(f).get('sort')
+        return value if value in CATEGORY_SORTS else 'oldest'
+    except (OSError, ValueError, AttributeError):
+        return 'oldest'
+
+
+def storefront_categories():
+    return sorted_categories(saved_category_sort())
+
+
+@app.route('/admin/categories/order', methods=['POST'])
+@admin_required
+def admin_category_order():
+    sort = request.form.get('sort')
+    if sort not in CATEGORY_SORTS:
+        flash('Невалидна подредба.', 'error')
+        return redirect(url_for('admin_categories'))
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=BASE_DIR,
+                                         prefix='.category-order-', delete=False) as f:
+            temp_path = f.name
+            json.dump({'sort': sort}, f)
+        os.replace(temp_path, os.path.join(BASE_DIR, 'category-order.json'))
+    except OSError:
+        flash('Подредбата не беше запазена. Проверете правата за запис.', 'error')
+    else:
+        flash('Подредбата на категориите в магазина е запазена.', 'success')
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)
+    return redirect(url_for('admin_categories', sort=sort))
+
+
 @app.route('/admin/categories', methods=['GET', 'POST'])
 @admin_required
 def admin_categories():
@@ -567,7 +606,8 @@ def admin_categories():
             flash(f'Категория "{name}" беше създадена.', 'success')
         return redirect(url_for('admin_categories'))
 
-    sort = selected_sort(CATEGORY_SORTS)
+    sort = (selected_sort(CATEGORY_SORTS) if 'sort' in request.args
+            else saved_category_sort())
     categories = sorted_categories(sort)
     return render_template('admin/categories.html', categories=categories,
                            sort=sort, sort_options=CATEGORY_SORTS)
@@ -595,7 +635,8 @@ def sorted_categories(sort):
 @app.route('/admin/categories/export.csv')
 @admin_required
 def admin_categories_export():
-    categories = sorted_categories(selected_sort(CATEGORY_SORTS))
+    categories = sorted_categories(selected_sort(CATEGORY_SORTS) if 'sort' in request.args
+                                   else saved_category_sort())
     return csv_download('categories.csv', ['ID', 'Категория', 'Брой продукти', 'Снимка'],
                         ([c['id'], c['name'], c['product_count'], c['image_url'] or '']
                          for c in categories))
