@@ -4,7 +4,7 @@ import secrets
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
-from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy.exc import IntegrityError
 from models import db, Order, CourierShipment
 from econt import EcontClient, EcontError, safe_pdf_url
@@ -59,7 +59,7 @@ def build_label(order, form):
         amount = Decimal(str(order.total)).quantize(Decimal('.01'))
         if not amount.is_finite() or amount <= 0:
             raise ValueError('Невалидна сума за наложен платеж.')
-        label['services'] = {'cdAmount': float(amount), 'cdType': 'get', 'cdCurrency': 'EUR'}
+        label['services'] = {'cdAmount': float(amount), 'cdType': 'get', 'cdCurrency': 'BGN'}
     return label
 
 
@@ -117,7 +117,11 @@ def register_courier(app, admin_required):
                        for o in result.get('offices', []) if o.get('code') and not o.get('isAPS')]
             return jsonify(offices=offices)
         except EcontError as exc:
+            current_app.logger.exception('Econt offices request failed')
             return jsonify(error=str(exc)), 502
+        except Exception:
+            current_app.logger.exception('Unexpected Econt offices error')
+            return jsonify(error='Грешка при връзка с тестовата система на Еконт.'), 502
 
     @app.route('/admin/orders/<int:order_id>/econt', methods=['POST'])
     @admin_required
@@ -165,10 +169,21 @@ def register_courier(app, admin_required):
                 raise EcontError('Липсва номер от Еконт. Проверете в e-Econt преди нов опит.', uncertain=True)
             save_status(shipment, status)
         except EcontError as exc:
+            current_app.logger.exception('Econt shipment creation failed')
             shipment.state = 'uncertain' if exc.uncertain else 'failed'
             shipment.error_message = str(exc)
             db.session.commit()
             return render_order(order, form, error=str(exc), code=502)
+        except Exception as exc:
+            current_app.logger.exception('Unexpected Econt shipment creation error')
+            shipment.state = 'failed'
+            shipment.error_message = str(exc)[:500]
+            db.session.commit()
+            return render_order(
+                order, form,
+                error='Грешка при връзка с тестовата система на Еконт. Проверете логовете.',
+                code=502,
+            )
         flash('Товарителницата е създадена.' + (' Това е тестова пратка.' if environment == 'test' else ''), 'success')
         return redirect(url_for('courier_order', order_id=order.id))
 
@@ -197,7 +212,11 @@ def register_courier(app, admin_required):
             save_status(shipment, status)
             flash('Статусът и PDF са обновени.', 'success')
         except (ValueError, EcontError) as exc:
+            current_app.logger.exception('Econt shipment status request failed')
             flash(str(exc), 'error')
+        except Exception:
+            current_app.logger.exception('Unexpected Econt shipment status error')
+            flash('Грешка при връзка с тестовата система на Еконт.', 'error')
         return redirect(url_for('courier_order', order_id=order.id))
 
     @app.route('/admin/orders/<int:order_id>/econt/pdf')
