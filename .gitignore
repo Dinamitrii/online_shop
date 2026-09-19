@@ -3,6 +3,7 @@
 
 # Виртуална среда
 venv/
+.venv/
 env/
 
 # Python
