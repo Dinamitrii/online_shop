@@ -853,13 +853,34 @@ def favicon():
     return (url_for('static', filename='img/favicon/favicon.ico'),
             url_for('static', filename='img/favicon/favicon-16x16.png'),
             url_for('static', filename='img/favicon/favicon-32x32.png'),
+            url_for('static', filename='img/favicon/favicon-96x96.png'),
+
+            url_for('static', filename='img/favicon/android-icon-36x36.png'),
+            url_for('static', filename='img/favicon/android-icon-48x48.png'),
+            url_for('static', filename='img/favicon/android-icon-72x72.png'),
+            url_for('static', filename='img/favicon/android-icon-96x96.png'),
+            url_for('static', filename='img/favicon/android-icon-144x144.png'),
             url_for('static', filename='img/favicon/android-chrome-192x192.png'),
-            url_for('static', filename='img/favicon/android-chrome-256x256.png'),
-            url_for('static', filename='img/favicon/apple-touch-icon.png'),
+
+            url_for('static', filename='img/favicon/apple-icon.png'),
+            url_for('static', filename='img/favicon/apple-icon-57x57.png'),
+            url_for('static', filename='img/favicon/apple-icon-60x60.png'),
+            url_for('static', filename='img/favicon/apple-icon-72x72.png'),
+            url_for('static', filename='img/favicon/apple-icon-76x76.png'),
+            url_for('static', filename='img/favicon/apple-icon-144x144.png'),
+            url_for('static', filename='img/favicon/apple-icon-152x152.png'),
+            url_for('static', filename='img/favicon/apple-icon-180x180.png'),
+            url_for('static', filename='img/favicon/apple-icon-precomposed.png'),
+
             url_for('static', filename='img/favicon/safari-pinned-tab.svg'),
-            url_for('static', filename='img/favicon/mstile-150x150.png'),
+
+            url_for('static', filename='img/favicon/ms-icon-70x70.png'),
+            url_for('static', filename='img/favicon/ms-icon-144x144.png'),
+            url_for('static', filename='img/favicon/ms-icon-150x150.png'),
+            url_for('static', filename='img/favicon/ms-icon-310x310.png'),
+
             url_for('static', filename='img/favicon/browserconfig.xml'),
-            url_for('static', filename='img/favicon/site.webmanifest'))
+            url_for('static', filename='img/favicon/manifest.json'))
 
 
 
