@@ -1,0 +1,93 @@
+{% extends 'admin/base.html' %}
+{% block title %}Еконт · Поръчка #{{ order.id }}{% endblock %}
+{% block content %}
+<div class="admin-header-row">
+    <h1 class="page-title">Еконт · Поръчка #{{ order.id }}</h1>
+    <a class="btn btn-secondary" href="{{ url_for('admin_order_detail', order_id=order.id) }}">← Към поръчката</a>
+</div>
+{% if environment == 'test' %}
+<div class="flash flash-warning"><strong>Тестова среда на Еконт.</strong> Товарителниците са демонстрационни. Използвайте измислени данни за получателя.</div>
+{% else %}
+<div class="flash flash-warning"><strong>Реална среда на Еконт.</strong> „Създай товарителница“ регистрира пратка при куриера.</div>
+{% endif %}
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if shipment and shipment.state == 'created' %}
+<section class="admin-panel">
+    <h2>Товарителница № {{ shipment.shipment_number }}</h2>
+    <p>{{ shipment.delivery_status }}</p>
+    {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
+    <form method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}" style="margin-top:16px">
+        <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+        <button class="btn btn-secondary" type="submit">Обнови статус / PDF</button>
+    </form>
+    <p class="field-hint">PDF се отваря в нов раздел. Използвайте бутона за печат на PDF прегледа.</p>
+</section>
+{% elif shipment and shipment.state in ('pending', 'uncertain') %}
+<section class="admin-panel">
+    <h2>Заявката очаква проверка</h2>
+    <p>{{ shipment.error_message or 'Изпратена е заявка за създаване на товарителница.' }}</p>
+    <p>Проверете поръчка #{{ order.id }} в e-Econt. Повторното създаване е блокирано, за да няма дублирана пратка.</p>
+    <form class="admin-form" method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+        <label for="shipment_number">Номер на вече създадената товарителница</label>
+        <input id="shipment_number" name="shipment_number" maxlength="64" required>
+        <button class="btn" type="submit">Провери и свържи с поръчката</button>
+    </form>
+</section>
+{% else %}
+{% if quote %}<div class="flash flash-success" role="status">Ориентировъчна доставка: <strong>{{ quote.totalPrice }} {{ quote.currency }}</strong>. Товарителница още не е създадена.</div>{% endif %}
+<form class="admin-form" method="post" id="courier-form">
+    <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+    <h2>Подател · изпращане от офис</h2>
+    <label for="sender_name">Име / фирма</label>
+    <input id="sender_name" name="sender_name" value="{{ form.get('sender_name', '') }}" maxlength="150" required>
+    <label for="sender_phone">Телефон</label>
+    <input id="sender_phone" name="sender_phone" value="{{ form.get('sender_phone', '') }}" maxlength="50" required>
+    <label for="sender_office">Офис на изпращане</label>
+    <input id="sender_office" name="sender_office" list="econt-offices" value="{{ form.get('sender_office', '') }}" placeholder="Код на офис" maxlength="20" required>
+    <button class="btn btn-small btn-secondary" type="button" id="load-offices" data-url="{{ url_for('courier_offices') }}">Зареди офисите на Еконт</button>
+    <small id="offices-status" role="status">След зареждане потърсете офис по име или код в полетата за офис.</small>
+    <datalist id="econt-offices"></datalist>
+    <h2>Получател</h2>
+    <label for="receiver_name">Име</label>
+    <input id="receiver_name" name="receiver_name" value="{{ form.get('receiver_name', '') }}" maxlength="150" required>
+    <label for="receiver_phone">Телефон</label>
+    <input id="receiver_phone" name="receiver_phone" value="{{ form.get('receiver_phone', '') }}" maxlength="50" required>
+    <label for="delivery_type">Доставка</label>
+    <select id="delivery_type" name="delivery_type">
+        <option value="office" {% if form.get('delivery_type') == 'office' %}selected{% endif %}>До офис</option>
+        <option value="address" {% if form.get('delivery_type') == 'address' %}selected{% endif %}>До адрес в България</option>
+    </select>
+    <div id="office-fields">
+        <label for="receiver_office">Офис на получаване</label>
+        <input id="receiver_office" name="receiver_office" list="econt-offices" value="{{ form.get('receiver_office', '') }}" placeholder="Код на офис" maxlength="20">
+    </div>
+    <div id="address-fields">
+        <label for="city">Населено място</label>
+        <input id="city" name="city" value="{{ form.get('city', '') }}" maxlength="100">
+        <label for="post_code">Пощенски код</label>
+        <input id="post_code" name="post_code" value="{{ form.get('post_code', '') }}" maxlength="10">
+        <label for="address">Улица и номер / квартал, блок, вход, етаж, апартамент</label>
+        <input id="address" name="address" value="{{ form.get('address', '') }}" maxlength="300">
+    </div>
+    <h2>Пратка</h2>
+    <p>Съдържание: {% for item in order.items %}{{ item.product_name }} × {{ item.qty }}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+    <label for="weight">Общо тегло с опаковката (kg, до 50)</label>
+    <input type="number" id="weight" name="weight" min="0.001" max="50" step="0.001" value="{{ form.get('weight', '') }}" required>
+    <label for="pack_count">Брой пакети</label>
+    <input type="number" id="pack_count" name="pack_count" min="1" max="100" value="{{ form.get('pack_count', '1') }}" required>
+    <label for="payer">Доставката се плаща от</label>
+    <select id="payer" name="payer">
+        <option value="receiver" {% if form.get('payer') == 'receiver' %}selected{% endif %}>Получател</option>
+        <option value="sender" {% if form.get('payer') == 'sender' %}selected{% endif %}>Подател</option>
+    </select>
+    <label for="cod"><input type="checkbox" id="cod" name="cod" value="1" {% if form.get('cod') == '1' %}checked{% endif %}> Наложен платеж: {{ '%.2f'|format(order.total) }} EUR</label>
+    <small class="field-hint">Сумата за артикулите е от поръчката. Доставката се начислява отделно от Еконт.</small>
+    <div class="admin-form-actions">
+        <button class="btn btn-secondary" type="submit" name="action" value="calculate">Изчисли доставка</button>
+        <button class="btn" type="submit" name="action" value="create">{% if environment == 'test' %}Създай тестова товарителница{% else %}Създай товарителница{% endif %}</button>
+    </div>
+</form>
+<script src="{{ url_for('static', filename='js/courier.js') }}" defer></script>
+{% endif %}
+{% endblock %}
