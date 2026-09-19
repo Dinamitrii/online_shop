@@ -1,6 +1,0 @@
-<div class="list-toolbar" aria-label="Документи за поръчката">
-    <a class="btn btn-small" target="_blank" rel="noopener" href="{{ url_for('order_print', order_id=order.id) }}">Печат на поръчката</a>
-    {% for extension, label in [('docx', 'Word DOCX'), ('xlsx', 'Excel XLSX'), ('csv', 'CSV')] %}
-    <a class="btn btn-small btn-secondary" href="{{ url_for('order_document', order_id=order.id, extension=extension) }}">{{ label }}</a>
-    {% endfor %}
-</div>
