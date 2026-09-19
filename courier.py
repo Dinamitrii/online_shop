@@ -59,7 +59,7 @@ def build_label(order, form):
         amount = Decimal(str(order.total)).quantize(Decimal('.01'))
         if not amount.is_finite() or amount <= 0:
             raise ValueError('Невалидна сума за наложен платеж.')
-        label['services'] = {'cdAmount': float(amount), 'cdType': 'get', 'cdCurrency': 'BGN'}
+        label['services'] = {'cdAmount': float(amount), 'cdType': 'get', 'cdCurrency': 'EUR'}
     return label
 
 

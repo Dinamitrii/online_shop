@@ -12,6 +12,23 @@ class EcontError(Exception):
         self.uncertain = uncertain
 
 
+def error_message(error):
+    """Read Econt's nested validation messages, including blank parent errors."""
+    messages = []
+    def collect(node, depth=0):
+        if not isinstance(node, dict) or depth > 10 or len(messages) >= 20:
+            return
+        message = node.get('message')
+        if isinstance(message, str) and message.strip() and message.strip() not in messages:
+            messages.append(message.strip())
+        children = node.get('innerErrors')
+        if isinstance(children, list):
+            for child in children[:20]:
+                collect(child, depth + 1)
+    collect(error)
+    return ' '.join(messages)[:500] or 'Невалидни данни за пратката. Проверете подател, получател и офисите.'
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -51,7 +68,7 @@ class EcontClient:
             except (ValueError, UnicodeError, OSError, AttributeError):
                 fault = {}
             if isinstance(fault, dict) and fault.get('type') == 'ExInvalidParam':
-                raise EcontError('Еконт: ' + str(fault.get('message', 'Невалидни данни.'))[:500]) from None
+                raise EcontError('Еконт: ' + error_message(fault)) from None
             if exc.code in (401, 403):
                 raise EcontError('Еконт отказа достъпа. Проверете акаунта и средата.') from None
             # A server error may happen after the shipment has already been created.
@@ -69,7 +86,7 @@ class EcontClient:
         error = result.get('error') or (result if result.get('type') and result.get('message') else None)
         if error:
             # Jinja escapes this message; never include request credentials or full response.
-            message = error.get('message', 'Невалидни данни.') if isinstance(error, dict) else 'Невалидни данни.'
+            message = error_message(error)
             raise EcontError('Еконт: ' + str(message)[:500])
         return result
 
