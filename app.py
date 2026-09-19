@@ -24,7 +24,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'store.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.environ.get('SHOP_DATABASE_PATH', os.path.join(BASE_DIR, 'store.db'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
@@ -37,6 +37,15 @@ app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 # Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
 # за да не показва браузърът стар кеширан style.css след ъпдейт.
 app.config['ASSET_VERSION'] = '9'
+
+# Courier settings: disabled unless explicitly enabled in the local .env.
+app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower() == 'true'
+app.config['COURIER_PROVIDER'] = os.environ.get('COURIER_PROVIDER', 'econt').lower()
+app.config['COURIER_ENVIRONMENT'] = os.environ.get('COURIER_ENVIRONMENT', 'test').lower()
+for key in ('ECONT_USERNAME', 'ECONT_PASSWORD', 'ECONT_SENDER_NAME',
+            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE'):
+    app.config[key] = os.environ.get(key, '')
+
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -884,6 +893,12 @@ def favicon():
 
 
 
+
+
+from courier import register_courier
+register_courier(app, admin_required)
+from order_documents import register_order_documents
+register_order_documents(app, admin_required)
 
 
 if __name__ == '__main__':

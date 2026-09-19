@@ -7,6 +7,8 @@
     <span class="status-badge status-{{ order.status | replace(' ', '-') }}">{{ order.status }}</span>
 </div>
 
+{% include 'admin/order_document_buttons.html' %}
+
 <div class="order-detail-grid">
     <div class="admin-panel">
         <h2>Клиент</h2>
@@ -16,6 +18,9 @@
         <p><strong>Адрес:</strong> {{ order.address }}</p>
         <p><strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
 
+        {% if courier_enabled %}
+        <p><a class="btn" href="{{ url_for('courier_order', order_id=order.id) }}">Еконт · Товарителница и печат</a></p>
+        {% endif %}
         <h2>Смяна на статус</h2>
         <form action="{{ url_for('admin_order_status', order_id=order.id) }}" method="post" class="status-change-form">
             <select name="status">
