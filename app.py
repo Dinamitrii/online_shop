@@ -897,6 +897,8 @@ def favicon():
 
 from courier import register_courier
 register_courier(app, admin_required)
+from order_documents import register_order_documents
+register_order_documents(app, admin_required)
 
 
 if __name__ == '__main__':

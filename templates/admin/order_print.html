@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ document.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_print.css') }}">
+</head>
+<body>
+<nav class="print-toolbar">
+    <button type="button" onclick="window.print()">Печат на документа</button>
+    {% for extension in ['docx', 'xlsx', 'csv'] %}
+    <a href="{{ url_for('order_document', order_id=document.id, extension=extension) }}">{{ extension | upper }}</a>
+    {% endfor %}
+    <a href="{{ url_for('admin_order_detail', order_id=document.id) }}">Към поръчката</a>
+</nav>
+<main class="order-document">
+    <p class="brand">Железария Дианабад</p>
+    <h1>{{ document.title }}</h1>
+    <dl>{% for key, value in document.metadata %}{% if value %}<dt>{{ key }}</dt><dd>{{ value }}</dd>{% endif %}{% endfor %}</dl>
+    <h2>Поръчани артикули</h2>
+    <table>
+        <thead><tr><th>№</th><th>Артикул</th><th>Брой</th><th>Ед. цена EUR</th><th>Сума EUR</th></tr></thead>
+        <tbody>{% for item in document['items'] %}<tr>
+            <td>{{ loop.index }}</td><td>{{ item.name }}</td><td>{{ item.qty }}</td>
+            <td>{{ '%.2f'|format(item.price) }}</td><td>{{ '%.2f'|format(item.subtotal) }}</td>
+        </tr>{% else %}<tr><td colspan="5">Няма артикули</td></tr>{% endfor %}</tbody>
+    </table>
+    <p class="total">Общо за артикулите: {{ '%.2f'|format(document.total) }} EUR</p>
+    <p class="note">Доставката се начислява отделно от куриера.</p>
+</main>
+</body>
+</html>

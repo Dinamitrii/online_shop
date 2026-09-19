@@ -5,6 +5,7 @@
     <h1 class="page-title">Еконт · Поръчка #{{ order.id }}</h1>
     <a class="btn btn-secondary" href="{{ url_for('admin_order_detail', order_id=order.id) }}">← Към поръчката</a>
 </div>
+{% include 'admin/order_document_buttons.html' %}
 {% if environment == 'test' %}
 <div class="flash flash-warning"><strong>Тестова среда на Еконт.</strong> Товарителниците са демонстрационни. Използвайте измислени данни за получателя.</div>
 {% else %}
@@ -15,7 +16,7 @@
 <section class="admin-panel">
     <h2>Товарителница № {{ shipment.shipment_number }}</h2>
     <p>{{ shipment.delivery_status }}</p>
-    {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
+    {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener" href="{{ url_for('courier_print', order_id=order.id) }}">Печат на товарителница</a> <a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Изтегли / отвори PDF</a>{% endif %}
     <form method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}" style="margin-top:16px">
         <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
         <button class="btn btn-secondary" type="submit">Обнови статус / PDF</button>

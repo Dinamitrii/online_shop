@@ -4,10 +4,10 @@ import secrets
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
-from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import Response, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy.exc import IntegrityError
 from models import db, Order, CourierShipment
-from econt import EcontClient, EcontError, safe_pdf_url
+from econt import EcontClient, EcontError, safe_pdf_url, fetch_pdf
 
 
 def required(form, key, title, limit=150):
@@ -213,3 +213,28 @@ def register_courier(app, admin_required):
         response.headers['Cache-Control'] = 'no-store'
         response.headers['Referrer-Policy'] = 'no-referrer'
         return response
+
+
+    @app.route('/admin/orders/<int:order_id>/econt/print')
+    @admin_required
+    def courier_print(order_id):
+        shipment = CourierShipment.query.filter_by(order_id=order_id,
+            environment=app.config['COURIER_ENVIRONMENT'], state='created').first_or_404()
+        response = Response(render_template('admin/courier_print.html', shipment=shipment))
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+
+    @app.route('/admin/orders/<int:order_id>/econt/print.pdf')
+    @admin_required
+    def courier_print_pdf(order_id):
+        shipment = CourierShipment.query.filter_by(order_id=order_id,
+            environment=app.config['COURIER_ENVIRONMENT'], state='created').first_or_404()
+        try:
+            content = fetch_pdf(shipment.pdf_url, shipment.environment)
+        except EcontError as exc:
+            return Response(str(exc), status=502, content_type='text/plain; charset=utf-8',
+                            headers={'Cache-Control': 'no-store'})
+        return Response(content, content_type='application/pdf', headers={
+            'Content-Disposition': f'inline; filename="econt-order-{order_id}.pdf"',
+            'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'SAMEORIGIN'})

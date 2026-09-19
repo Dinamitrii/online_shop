@@ -105,3 +105,18 @@ def safe_pdf_url(value, environment):
     except ValueError:
         pass
     return ''
+
+
+def fetch_pdf(value, environment):
+    """Fetch the original Econt PDF without forwarding account credentials."""
+    url = safe_pdf_url(value, environment)
+    if not url:
+        raise EcontError('Няма валиден PDF адрес от Еконт.')
+    try:
+        with build_opener(NoRedirect()).open(Request(url, headers={'Accept': 'application/pdf'}), timeout=25) as response:
+            data = response.read(20 * 1024 * 1024 + 1)
+    except (HTTPError, URLError, TimeoutError, OSError):
+        raise EcontError('PDF не може да бъде зареден от Еконт. Обновете статуса и опитайте отново.') from None
+    if len(data) > 20 * 1024 * 1024 or not data.startswith(b'%PDF-'):
+        raise EcontError('Еконт не върна валиден PDF документ.')
+    return data

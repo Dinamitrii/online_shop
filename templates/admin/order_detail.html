@@ -7,6 +7,8 @@
     <span class="status-badge status-{{ order.status | replace(' ', '-') }}">{{ order.status }}</span>
 </div>
 
+{% include 'admin/order_document_buttons.html' %}
+
 <div class="order-detail-grid">
     <div class="admin-panel">
         <h2>Клиент</h2>
