@@ -62,3 +62,21 @@ class OrderItem(db.Model):
     @property
     def subtotal(self):
         return self.price * self.qty
+
+
+class CourierShipment(db.Model):
+    """Durable reservation prevents duplicate labels across workers and retries."""
+    __tablename__ = 'courier_shipments'
+    __table_args__ = (db.UniqueConstraint('order_id', 'environment'),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    environment = db.Column(db.String(8), nullable=False)
+    state = db.Column(db.String(16), nullable=False, default='pending')
+    shipment_number = db.Column(db.String(64), nullable=True)
+    pdf_url = db.Column(db.Text, default='')
+    delivery_status = db.Column(db.String(200), default='')
+    error_message = db.Column(db.String(600), default='')
+    request_json = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
