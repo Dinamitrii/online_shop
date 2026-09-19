@@ -15,3 +15,4 @@ store.db
 # Качени от потребителя снимки на продукти (не са част от кода)
 static/img/products/*
 !static/img/products/.gitkeep
+/.venv/
