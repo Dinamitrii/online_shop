@@ -16,6 +16,12 @@
     <h2>Товарителница № {{ shipment.shipment_number }}</h2>
     <p>{{ shipment.delivery_status }}</p>
     {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
+    <div class="admin-form-actions" style="margin-top:16px">
+        {% for fmt, title in [('docx', 'Word (.docx)'), ('xlsx', 'Excel (.xlsx)'), ('csv', 'CSV')] %}
+        <a class="btn btn-secondary" href="{{ url_for('courier_export', order_id=order.id, fmt=fmt) }}">{{ title }}</a>
+        {% endfor %}
+    </div>
+    <p class="field-hint">Word, Excel и CSV съдържат справка за пратката. За предаване на куриера използвайте официалния PDF от Еконт.</p>
     <form method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}" style="margin-top:16px">
         <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
         <button class="btn btn-secondary" type="submit">Обнови статус / PDF</button>

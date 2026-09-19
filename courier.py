@@ -4,7 +4,7 @@ import secrets
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
-from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for, send_file
 from sqlalchemy.exc import IntegrityError
 from models import db, Order, CourierShipment
 from econt import EcontClient, EcontError, safe_pdf_url
@@ -231,4 +231,21 @@ def register_courier(app, admin_required):
         response = redirect(url)
         response.headers['Cache-Control'] = 'no-store'
         response.headers['Referrer-Policy'] = 'no-referrer'
+        return response
+
+
+    @app.route('/admin/orders/<int:order_id>/econt/export/<fmt>')
+    @admin_required
+    def courier_export(order_id, fmt):
+        if fmt not in ('docx', 'xlsx', 'csv'):
+            abort(404)
+        shipment = CourierShipment.query.filter_by(
+            order_id=order_id, environment=app.config['COURIER_ENVIRONMENT'],
+            state='created').first_or_404()
+        from courier_exports import export_shipment
+        output, mime = export_shipment(shipment, fmt)
+        response = send_file(output, mimetype=mime, as_attachment=True,
+                             download_name=f'econt-order-{order_id}.{fmt}', max_age=0)
+        response.headers['Cache-Control'] = 'no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
