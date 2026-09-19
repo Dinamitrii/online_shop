@@ -17,3 +17,4 @@ store.db
 static/img/products/*
 !static/img/products/.gitkeep
 /.venv/
+/.venv/
