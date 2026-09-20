@@ -1,42 +1,24 @@
 ---
 deployment:
   tasks:
-    # ЗАМЕНИ с реалния абсолютен път до Application root
-    # Реалната папка на живото приложение (Passenger Application Root).
-    # (същата папка, която си въвел/а в Setup Python App).
-    - export DEPLOYPATH=/home/ejelezar/hardware_store
+    - |
+      set -eu
+      APP_ROOT="/home/ejelezar/hardware_store"
+      APP_PYTHON="/home/ejelezar/virtualenv/hardware_store/3.12/bin/python"
 
-    # Копира кода от git checkout-а към живата папка, но НИКОГА не пипа:
-    # Пример: /home/твоя_cpanel_user/hardware_store
-    #   - store.db / store.db.bak  (реалната база данни с продукти/поръчки)
-    #   - .env                      (паролата и другите тайни настройки на живо)
-    #   - static/img/products/      (реално качени снимки на продукти)
-    #   - category-order.json       (подредбата на категориите, запазена от админа)
-    # Така git push никога не може да презапише жива информация.
-    - /bin/mkdir -p $DEPLOYPATH
-    - >
-      rsync -a --delete
-      --exclude='.git'
-      --exclude='store.db'
-      --exclude='store.db.bak'
-      --exclude='.env'
-      --exclude='static/img/products/'
-      --exclude='category-order.json'
-      --exclude='hardware_store.bak'
-    - export DEPLOYPATH=/home/ejelezar/repositories/online_shop
-      --exclude='online-shop-categories-update'
-      --exclude='*.zip'
-      --exclude='tmp'
-      ./ $DEPLOYPATH/
+      test -d "$APP_ROOT"
+      test -x "$APP_PYTHON"
+      test -f app.py
+      test -f courier_exports.py
+      command -v rsync >/dev/null
 
-    # Инсталира/обновява Python зависимостите от requirements.txt
-    # във virtualenv-а на приложението (пътят също идва от Setup Python App
-    # страницата, секция "Enter to the virtual environment").
-    # във virtualenv-а на приложението.
-    - /home/USERNAME/virtualenv/PATH_TO_APP/3.x/bin/pip install -r $DEPLOYPATH/requirements.txt
-    - /home/ejelezar/virtualenv/hardware_store/3.13/bin/pip install -r $DEPLOYPATH/requirements.txt
+      "$APP_PYTHON" -m pip install -r requirements.txt
+      "$APP_PYTHON" -c 'import flask, flask_sqlalchemy, dotenv, docx, openpyxl'
 
-    # Принуждава Passenger да рестартира приложението и да зареди новия код
-    - /bin/mkdir -p $DEPLOYPATH/tmp
-    - /bin/touch $DEPLOYPATH/tmp/restart.txt
+      # Обновява кода, като запазва данните и настройките.
+      rsync -a app.py models.py courier.py econt.py courier_exports.py passenger_wsgi.py wsgi.py requirements.txt "$APP_ROOT/"
+      rsync -a templates/ "$APP_ROOT/templates/"
+      rsync -a --exclude='/img/products/' --exclude='/img/categories/' static/ "$APP_ROOT/static/"
 
+      /bin/mkdir -p "$APP_ROOT/tmp"
+      /bin/touch "$APP_ROOT/tmp/restart.txt"
