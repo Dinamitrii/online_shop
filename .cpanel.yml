@@ -1,16 +1,47 @@
 ---
+# Деплой на клона, който е избран в cPanel » Git Version Control (master), към живото приложение.
+# Работи и за master, и за клон с нови модули (напр. security.py): всички *.py в корена се копират.
 deployment:
   tasks:
-    # ЗАМЕНИ с реалния абсолютен път до Application root
-    # (същата папка, която си въвел/а в Setup Python App).
-    # Пример: /home/твоя_cpanel_user/hardware_store
-    - export DEPLOYPATH=/home/ejelezar/repositories/online_shop
+    - |
+      set -eu
+      APP_ROOT="/home/ejelezar/hardware_store"
+      APP_PYTHON="/home/ejelezar/virtualenv/hardware_store/3.12/bin/python"
 
-    # Инсталира/обновява Python зависимостите от requirements.txt
-    # във virtualenv-а на приложението (пътят също идва от Setup Python App
-    # страницата, секция "Enter to the virtual environment").
-    - /home/USERNAME/virtualenv/PATH_TO_APP/3.x/bin/pip install -r $DEPLOYPATH/requirements.txt
+      # --- Проверки преди да пипаме живия сайт ---
+      test -d "$APP_ROOT"
+      test -x "$APP_PYTHON"
+      command -v rsync >/dev/null
+      for f in app.py models.py courier.py econt.py courier_exports.py wsgi.py requirements.txt; do
+        test -f "$f"
+      done
+      # passenger_wsgi.py е нужен на Passenger: или идва от репото, или вече е на сървъра.
+      if [ ! -f passenger_wsgi.py ] && [ ! -f "$APP_ROOT/passenger_wsgi.py" ]; then
+        echo "Липсва passenger_wsgi.py (нито в репото, нито в $APP_ROOT)" >&2
+        exit 1
+      fi
 
-    # Принуждава Passenger да рестартира приложението и да зареди новия код
-    - /bin/mkdir -p $DEPLOYPATH/tmp
-    - /bin/touch $DEPLOYPATH/tmp/restart.txt
+      # --- Резервно копие на базата (пази последните 5) ---
+      if [ -f "$APP_ROOT/store.db" ]; then
+        cp -p "$APP_ROOT/store.db" "$APP_ROOT/store.db.predeploy-$(date +%Y%m%d-%H%M%S)"
+        ls -1t "$APP_ROOT"/store.db.predeploy-* 2>/dev/null | tail -n +6 | while read -r old; do rm -f -- "$old"; done
+      fi
+
+      # --- Зависимости ---
+      "$APP_PYTHON" -m pip install -r requirements.txt
+      "$APP_PYTHON" -c 'import flask, flask_sqlalchemy, dotenv, docx, openpyxl'
+
+      # --- Код. Не се пипат: .env, store.db, category-order.json, качените снимки ---
+      rsync -a --include='/*.py' --include='/requirements.txt' --exclude='*' ./ "$APP_ROOT/"
+      rsync -a templates/ "$APP_ROOT/templates/"
+      rsync -a --exclude='/img/products/' --exclude='/img/categories/' static/ "$APP_ROOT/static/"
+
+      # --- Проверка, че новият код се зарежда. При грешка НЕ рестартираме: работи старият процес. ---
+      (cd "$APP_ROOT" && SHOP_DATABASE_PATH="/tmp/deploycheck-$$.db" "$APP_PYTHON" -c 'import app') || {
+        echo "Новият код не се зарежда. Рестартът е пропуснат." >&2
+        exit 1
+      }
+
+      # --- Рестарт на Passenger ---
+      /bin/mkdir -p "$APP_ROOT/tmp"
+      /bin/touch "$APP_ROOT/tmp/restart.txt"
