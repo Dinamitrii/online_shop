@@ -1,47 +1,168 @@
 ---
-# Деплой на клона, който е избран в cPanel » Git Version Control (master), към живото приложение.
-# Работи и за master, и за клон с нови модули (напр. security.py): всички *.py в корена се копират.
+# cPanel Git deployment for the live Flask/Passenger application.
+# Production data (.env, store.db, category-order.json and uploaded images)
+# is preserved.
+
 deployment:
   tasks:
     - |
       set -eu
-      APP_ROOT="/home/ejelezar/hardware_store"
-      APP_PYTHON="/home/ejelezar/virtualenv/hardware_store/3.12/bin/python"
 
-      # --- Проверки преди да пипаме живия сайт ---
-      test -d "$APP_ROOT"
-      test -x "$APP_PYTHON"
-      command -v rsync >/dev/null
-      for f in app.py models.py courier.py econt.py courier_exports.py wsgi.py requirements.txt; do
-        test -f "$f"
-      done
-      # passenger_wsgi.py е нужен на Passenger: или идва от репото, или вече е на сървъра.
-      if [ ! -f passenger_wsgi.py ] && [ ! -f "$APP_ROOT/passenger_wsgi.py" ]; then
-        echo "Липсва passenger_wsgi.py (нито в репото, нито в $APP_ROOT)" >&2
-        exit 1
-      fi
+      # Default paths for the current cPanel account.
+      # They can be overridden by the deployment environment if needed.
+      APP_ROOT="${APP_ROOT:-/home/ejelezar/hardware_store}"
+      APP_PYTHON="${APP_PYTHON:-/home/ejelezar/virtualenv/hardware_store/3.12/bin/python}"
 
-      # --- Резервно копие на базата (пази последните 5) ---
-      if [ -f "$APP_ROOT/store.db" ]; then
-        cp -p "$APP_ROOT/store.db" "$APP_ROOT/store.db.predeploy-$(date +%Y%m%d-%H%M%S)"
-        ls -1t "$APP_ROOT"/store.db.predeploy-* 2>/dev/null | tail -n +6 | while read -r old; do rm -f -- "$old"; done
-      fi
+      echo "==> Deploying to: $APP_ROOT"
+      echo "==> Python: $APP_PYTHON"
 
-      # --- Зависимости ---
-      "$APP_PYTHON" -m pip install -r requirements.txt
-      "$APP_PYTHON" -c 'import flask, flask_sqlalchemy, dotenv, docx, openpyxl'
+      # ------------------------------------------------------------
+      # Preflight checks
+      # ------------------------------------------------------------
 
-      # --- Код. Не се пипат: .env, store.db, category-order.json, качените снимки ---
-      rsync -a --include='/*.py' --include='/requirements.txt' --exclude='*' ./ "$APP_ROOT/"
-      rsync -a templates/ "$APP_ROOT/templates/"
-      rsync -a --exclude='/img/products/' --exclude='/img/categories/' static/ "$APP_ROOT/static/"
-
-      # --- Проверка, че новият код се зарежда. При грешка НЕ рестартираме: работи старият процес. ---
-      (cd "$APP_ROOT" && SHOP_DATABASE_PATH="/tmp/deploycheck-$$.db" "$APP_PYTHON" -c 'import app') || {
-        echo "Новият код не се зарежда. Рестартът е пропуснат." >&2
+      test -d "$APP_ROOT" || {
+        echo "ERROR: APP_ROOT does not exist: $APP_ROOT" >&2
         exit 1
       }
 
-      # --- Рестарт на Passenger ---
+      test -x "$APP_PYTHON" || {
+        echo "ERROR: Python executable not found: $APP_PYTHON" >&2
+        exit 1
+      }
+
+      command -v rsync >/dev/null || {
+        echo "ERROR: rsync is not installed." >&2
+        exit 1
+      }
+
+      for f in \
+        app.py \
+        models.py \
+        courier.py \
+        econt.py \
+        courier_exports.py \
+        passenger_wsgi.py \
+        wsgi.py \
+        requirements.txt
+      do
+        test -f "$f" || {
+          echo "ERROR: missing repository file: $f" >&2
+          exit 1
+        }
+      done
+
+      # ------------------------------------------------------------
+      # Python dependencies
+      # ------------------------------------------------------------
+
+      echo "==> Installing Python dependencies"
+
+      "$APP_PYTHON" -m pip install -r requirements.txt
+
+      # ------------------------------------------------------------
+      # Backup production database
+      # ------------------------------------------------------------
+
+      if [ -f "$APP_ROOT/store.db" ]; then
+        echo "==> Backing up production database"
+
+        cp -p \
+          "$APP_ROOT/store.db" \
+          "$APP_ROOT/store.db.predeploy-$(date +%Y%m%d-%H%M%S)"
+
+        ls -1t "$APP_ROOT"/store.db.predeploy-* 2>/dev/null |
+          tail -n +6 |
+          while read -r old; do
+            rm -f -- "$old"
+          done
+      fi
+
+      # ------------------------------------------------------------
+      # Deploy Python application
+      # ------------------------------------------------------------
+
+      # IMPORTANT:
+      # Do NOT overwrite:
+      #   .env
+      #   store.db
+      #   category-order.json
+      #   uploaded product/category images
+      #
+      # All root-level Python files are deployed, including:
+      #   app.py
+      #   models.py
+      #   courier.py
+      #   econt.py
+      #   courier_exports.py
+      #   passenger_wsgi.py
+      #   wsgi.py
+
+      echo "==> Syncing Python code"
+
+      rsync -a \
+        --include='/*.py' \
+        --include='/requirements.txt' \
+        --exclude='*' \
+        ./ "$APP_ROOT/"
+
+      # ------------------------------------------------------------
+      # Templates
+      # ------------------------------------------------------------
+
+      echo "==> Syncing templates"
+
+      rsync -a \
+        templates/ "$APP_ROOT/templates/"
+
+      # ------------------------------------------------------------
+      # Static files
+      # ------------------------------------------------------------
+
+      # Uploaded images are production data and must survive deployments.
+
+      echo "==> Syncing static files"
+
+      rsync -a \
+        --exclude='/img/products/' \
+        --exclude='/img/categories/' \
+        static/ "$APP_ROOT/static/"
+
+      # ------------------------------------------------------------
+      # Verify the deployed application BEFORE restarting Passenger
+      # ------------------------------------------------------------
+
+      echo "==> Checking deployed application import"
+
+      DEPLOY_CHECK_DB="/tmp/deploycheck-$$.db"
+
+      (
+        cd "$APP_ROOT"
+
+        SHOP_DATABASE_PATH="$DEPLOY_CHECK_DB" \
+          "$APP_PYTHON" -c \
+          'import app; print("Flask import OK")'
+      ) || {
+        echo "ERROR: deployed application failed to import." >&2
+        echo "Passenger was NOT restarted." >&2
+        exit 1
+      }
+
+      # Remove temporary SQLite files created during the import test.
+
+      rm -f \
+        "$DEPLOY_CHECK_DB" \
+        "$DEPLOY_CHECK_DB-journal" \
+        "$DEPLOY_CHECK_DB-wal" \
+        "$DEPLOY_CHECK_DB-shm" \
+        2>/dev/null || true
+
+      # ------------------------------------------------------------
+      # Restart Passenger
+      # ------------------------------------------------------------
+
+      echo "==> Restarting Passenger"
+
       /bin/mkdir -p "$APP_ROOT/tmp"
       /bin/touch "$APP_ROOT/tmp/restart.txt"
+
+      echo "==> Deployment completed successfully"
