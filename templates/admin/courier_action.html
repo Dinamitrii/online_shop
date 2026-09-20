@@ -5,7 +5,7 @@
 <section class="admin-panel">
 <p>Поръчка #{{ order.id }} · Товарителница <strong>{{ shipment.shipment_number }}</strong> · {{ 'ТЕСТОВА среда' if environment == 'test' else 'РЕАЛНА среда' }}</p>
 {% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
-{% if shipment.state == 'created' and (not action or action.state == 'failed') %}
+{% if shipment.state == 'created' and (not action or action.state in ('failed', 'rejected')) %}
 <form method="post" class="admin-form">
 <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
 {% if kind == 'cancel' %}

@@ -16,6 +16,7 @@
 {% for action in actions %}
 <p><strong>{{ 'Анулиране' if action.kind == 'cancel' else 'Заявка за куриер' }}{% if action.request_id %} № {{ action.request_id }}{% endif %}</strong>: {{ action.message or 'Изпращане на заявката…' }}</p>
 {% if action.state in ('pending', 'uncertain') %}<p>Не повтаряйте заявката. Проверете резултата в e-Econt или с Еконт.</p>{% endif %}
+{% if action.kind == 'pickup' and action.state == 'rejected' %}<p>Заявката е отхвърлена — можете да заявите куриер отново.</p>{% endif %}
 {% if action.kind == 'pickup' and action.state == 'succeeded' %}
 <form method="post" action="{{ url_for('courier_pickup_status', order_id=order.id) }}">
 <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
@@ -34,6 +35,12 @@
         <a class="btn btn-secondary" href="{{ url_for('courier_action', order_id=order.id, kind='cancel') }}">Анулирай в Еконт</a>
     </div>
     {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
+    <div class="admin-form-actions" style="margin-top:16px">
+        {% for fmt, title in [('docx', 'Word (.docx)'), ('xlsx', 'Excel (.xlsx)'), ('csv', 'CSV')] %}
+        <a class="btn btn-secondary" href="{{ url_for('courier_export', order_id=order.id, fmt=fmt) }}">{{ title }}</a>
+        {% endfor %}
+    </div>
+    <p class="field-hint">Word, Excel и CSV съдържат справка за пратката. За предаване на куриера използвайте официалния PDF от Еконт.</p>
     <form method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}" style="margin-top:16px">
         <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
         <button class="btn btn-secondary" type="submit">Обнови статус / PDF</button>
@@ -43,7 +50,25 @@
 {% elif shipment and shipment.state == 'cancelled' %}
 <section class="admin-panel"><h2>Товарителница № {{ shipment.shipment_number }} е анулирана</h2><p>Еконт потвърди анулирането. Поръчката остава запазена в магазина.</p></section>
 {% elif shipment and shipment.state in ('cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') %}
-<section class="admin-panel"><h2>Действието към Еконт очаква проверка</h2><p>{{ shipment.error_message or 'Заявката е изпратена. Изчакайте отговора.' }}</p><p>Проверете резултата в e-Econt или с Еконт. Повторното изпращане е блокирано.</p></section>
+<section class="admin-panel">
+    <h2>Действието към Еконт очаква проверка</h2>
+    <p>{{ shipment.error_message or 'Заявката е изпратена. Изчакайте отговора.' }}</p>
+    <p>Проверете резултата в e-Econt или с Еконт. Повторното изпращане е блокирано, докато не запишете резултата.</p>
+    {% set kind = shipment.state.split('_')[0] %}
+    <form class="admin-form" method="post" action="{{ url_for('courier_resolve', order_id=order.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+        <h3>Записване на резултата от e-Econt</h3>
+        <label><input type="radio" name="outcome" value="not_done" required> {{ 'Анулирането НЕ е изпълнено — товарителницата е активна' if kind == 'cancel' else 'Заявката за куриер НЕ е приета' }}</label>
+        <label><input type="radio" name="outcome" value="done" required> {{ 'Товарителницата Е анулирана' if kind == 'cancel' else 'Заявката за куриер Е приета' }}</label>
+        {% if kind == 'pickup' %}
+        <label for="request_id">Номер на заявката за куриер (само ако е приета)</label>
+        <input id="request_id" name="request_id" maxlength="64">
+        {% endif %}
+        <label><input type="checkbox" name="confirm" value="{{ shipment.id }}" required> Проверих резултата в e-Econt.</label>
+        <button class="btn" type="submit">Запази резултата</button>
+        <p class="field-hint">Нищо не се изпраща към Еконт. Ако заявката е била изпратена преди по-малко от 2 минути, изчакайте.</p>
+    </form>
+</section>
 {% elif shipment and shipment.state in ('pending', 'uncertain') %}
 <section class="admin-panel">
     <h2>Заявката очаква проверка</h2>

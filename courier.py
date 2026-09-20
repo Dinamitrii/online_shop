@@ -1,6 +1,7 @@
 """Admin-only shipment preparation; no live calls happen at import or page load."""
 import json
 import secrets
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 
@@ -8,6 +9,15 @@ from flask import abort, current_app, flash, jsonify, redirect, render_template,
 from sqlalchemy.exc import IntegrityError
 from models import db, Order, CourierShipment, CourierAction
 from econt import EcontClient, EcontError, safe_pdf_url
+from security import safe_equal
+
+
+# Actions in these states may be submitted again (definite failure, or pickup rejected by Econt).
+RETRYABLE_ACTION_STATES = ('failed', 'rejected')
+# Shipment states that wait for the result of an external cancel/pickup call.
+UNRESOLVED_STATES = ('cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown')
+# A *_pending call is in flight for at most the 25 s HTTP timeout; only later is it "stuck".
+PENDING_GRACE = timedelta(minutes=2)
 
 
 def required(form, key, title, limit=150):
@@ -93,7 +103,7 @@ def register_courier(app, admin_required):
         def wrapped(*args, **kwargs):
             expected = session.get('courier_csrf', '')
             actual = request.form.get('csrf_token', '')
-            if not expected or not secrets.compare_digest(expected, actual):
+            if not expected or not safe_equal(expected, actual):
                 abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
             return view(*args, **kwargs)
         return wrapped
@@ -126,6 +136,10 @@ def register_courier(app, admin_required):
         except EcontError as exc:
             response = jsonify(error=str(exc))
             response.status_code = 502
+        except Exception:
+            current_app.logger.exception('Unexpected Econt profiles error')
+            response = jsonify(error='Грешка при зареждане на профилите от Еконт.')
+            response.status_code = 502
         response.headers['Cache-Control'] = 'no-store'
         return response
 
@@ -144,7 +158,7 @@ def register_courier(app, admin_required):
             return jsonify(error=str(exc)), 502
         except Exception:
             current_app.logger.exception('Unexpected Econt offices error')
-            return jsonify(error='Грешка при връзка с тестовата система на Еконт.'), 502
+            return jsonify(error='Грешка при връзка с Еконт.'), 502
 
     @app.route('/admin/orders/<int:order_id>/econt', methods=['POST'])
     @admin_required
@@ -204,7 +218,7 @@ def register_courier(app, admin_required):
             db.session.commit()
             return render_order(
                 order, form,
-                error='Грешка при връзка с тестовата система на Еконт. Проверете логовете.',
+                error='Грешка при връзка с Еконт. Проверете логовете.',
                 code=502,
             )
         flash('Товарителницата е създадена.' + (' Това е тестова пратка.' if environment == 'test' else ''), 'success')
@@ -241,7 +255,7 @@ def register_courier(app, admin_required):
             flash(str(exc), 'error')
         except Exception:
             current_app.logger.exception('Unexpected Econt shipment status error')
-            flash('Грешка при връзка с тестовата система на Еконт.', 'error')
+            flash('Грешка при връзка с Еконт.', 'error')
         return redirect(url_for('courier_order', order_id=order.id))
 
     @app.route('/admin/orders/<int:order_id>/econt/pdf')
@@ -299,17 +313,16 @@ def register_courier(app, admin_required):
                                    environment=environment, error=error), code
         if request.method == 'GET':
             return page()
-        if not secrets.compare_digest(session['courier_csrf'], form.get('csrf_token', '')):
-            abort(400)
+        if not safe_equal(session['courier_csrf'], form.get('csrf_token', '')):
+            abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
         if form.get('confirm') != str(shipment.id):
             return page('Потвърдете действието за тази товарителница.', 400)
-        if shipment.state != 'created' or (action and action.state != 'failed'):
+        if shipment.state != 'created' or (action and action.state not in RETRYABLE_ACTION_STATES):
             return page('Действието вече е изпълнено или очаква проверка. Не е изпратена нова заявка.', 409)
         try:
             client = EcontClient(app.config)
             payload = {'shipmentNumbers': [shipment.shipment_number]}
             if kind == 'pickup':
-                from datetime import datetime
                 from zoneinfo import ZoneInfo
                 if order.status in ('отказана', 'завършена', 'изпратена'):
                     raise ValueError('Не може да заявите вземане за изпратена, завършена или отказана поръчка.')
@@ -343,6 +356,7 @@ def register_courier(app, admin_required):
             action = CourierAction(shipment_id=shipment.id, kind=kind)
             db.session.add(action)
         action.state = 'pending'
+        action.request_id = ''
         action.request_json = json.dumps(payload, ensure_ascii=False)
         action.message = ''
         try:
@@ -389,6 +403,9 @@ def register_courier(app, admin_required):
         try:
             status = EcontClient(app.config).courier_request_status(action.request_id)
             action.message = names.get(status.get('status'), 'Непознат статус от Еконт')
+            if status.get('status') in ('reject', 'reject_client'):
+                # Econt will not send a courier; allow a new pickup request.
+                action.state = 'rejected'
             for key in ('note', 'reject_reason'):
                 if status.get(key):
                     action.message += ' · ' + str(status[key])[:500]
@@ -397,3 +414,60 @@ def register_courier(app, admin_required):
         except EcontError as exc:
             flash(str(exc), 'error')
         return redirect(url_for('courier_order', order_id=order_id))
+
+    @app.route('/admin/orders/<int:order_id>/econt/resolve', methods=['POST'])
+    @admin_required
+    @protected_post
+    def courier_resolve(order_id):
+        """Let the admin record the real outcome of a cancel/pickup call whose result is unknown.
+
+        Nothing is sent to Econt here: the admin checked e-Econt and tells the shop what happened.
+        Without this a shipment stuck in *_pending / *_unknown could never be unlocked or deleted.
+        """
+        shipment = CourierShipment.query.filter_by(order_id=order_id,
+                                                   environment=app.config['COURIER_ENVIRONMENT']).first_or_404()
+        back = redirect(url_for('courier_order', order_id=order_id))
+        if shipment.state not in UNRESOLVED_STATES:
+            flash('Няма неизяснено действие към Еконт за тази пратка.', 'error')
+            return back
+        if request.form.get('confirm') != str(shipment.id):
+            flash('Потвърдете, че сте проверили резултата в e-Econt.', 'error')
+            return back
+        outcome = request.form.get('outcome')
+        if outcome not in ('done', 'not_done'):
+            flash('Изберете какъв е резултатът в Еконт.', 'error')
+            return back
+        if shipment.state.endswith('_pending') and shipment.updated_at \
+                and datetime.utcnow() - shipment.updated_at < PENDING_GRACE:
+            flash('Заявката към Еконт може още да се обработва. Опитайте отново след няколко минути.', 'error')
+            return back
+        kind = shipment.state.split('_')[0]
+        action = CourierAction.query.filter_by(shipment_id=shipment.id, kind=kind).first()
+        if action is None:
+            action = CourierAction(shipment_id=shipment.id, kind=kind, request_json='{}')
+            db.session.add(action)
+        if outcome == 'not_done':
+            shipment.state = 'created'
+            action.state = 'failed'
+            action.message = 'Администратор потвърди, че действието не е изпълнено в Еконт. Може да се опита отново.'
+        elif kind == 'cancel':
+            shipment.state = 'cancelled'
+            shipment.delivery_status = 'Анулирана в Еконт'
+            shipment.pdf_url = ''
+            action.state = 'succeeded'
+            action.message = 'Администратор потвърди, че товарителницата е анулирана в Еконт.'
+        else:
+            try:
+                request_id = required(request.form, 'request_id', 'номер на заявката за куриер', 64)
+            except ValueError as exc:
+                db.session.rollback()
+                flash(str(exc), 'error')
+                return back
+            shipment.state = 'created'
+            action.state = 'succeeded'
+            action.request_id = request_id
+            action.message = 'Администратор потвърди, че заявката за куриер е приета в Еконт.'
+        shipment.error_message = ''
+        db.session.commit()
+        flash('Резултатът е записан.', 'success')
+        return back

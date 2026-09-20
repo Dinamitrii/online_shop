@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
+from security import safe_equal, safe_next_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -30,6 +31,12 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
 # Парола за админ панела — вземи се от .env, с fallback за удобство при първо пускане.
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'admin123')
+if app.config['ADMIN_PASSWORD'] == 'admin123':
+    app.logger.warning('ADMIN_PASSWORD не е зададена в .env — използва се паролата по подразбиране. '
+                       'Сменете я преди публикуване.')
+
+# Сесийната бисквитка не се изпраща при cross-site POST заявки (допълнителна защита срещу CSRF).
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # WhatsApp номер за бутона за жив чат (код на държава + номер, без + и интервали).
 app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
@@ -388,11 +395,10 @@ def order_confirmation(order_id):
 def admin_login():
     if request.method == 'POST':
         password = request.form.get('password', '')
-        if password == app.config['ADMIN_PASSWORD']:
+        if safe_equal(password, app.config['ADMIN_PASSWORD']):
             session['is_admin'] = True
             flash('Влязохте успешно.', 'success')
-            next_url = request.form.get('next') or url_for('admin_dashboard')
-            return redirect(next_url)
+            return redirect(safe_next_url(request.form.get('next'), url_for('admin_dashboard')))
         flash('Грешна парола.', 'error')
     next_url = request.args.get('next', '')
     return render_template('admin/login.html', next_url=next_url)
@@ -750,7 +756,7 @@ def admin_order_delete(order_id):
         return render_template('admin/order_delete.html', order=order,
                                shipments=shipments, blocked=blocked)
     token = session.get('order_delete_csrf', '')
-    if not token or not secrets.compare_digest(token, request.form.get('csrf_token', '')):
+    if not token or not safe_equal(token, request.form.get('csrf_token', '')):
         abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
     if request.form.get('confirm_order_id') != str(order_id):
         abort(400, 'Потвърдете изтриването на поръчката.')

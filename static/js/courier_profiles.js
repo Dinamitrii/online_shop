@@ -52,7 +52,8 @@
     try {
       const response = await fetch(root.dataset.url, {headers: {'Accept': 'application/json'}, cache: 'no-store'});
       if (response.redirected) throw new Error('Влезте отново в админ панела.');
-      const data = await response.json();
+      let data;
+      try { data = await response.json(); } catch (_) { throw new Error('Неочакван отговор от сървъра. Опитайте отново.'); }
       if (!response.ok) throw new Error(data.error || 'Неуспешно зареждане от Еконт.');
       profiles = data.profiles;
       if (pickup) profiles = profiles.filter(p => p.name === root.dataset.sender);
