@@ -1,7 +1,7 @@
-<div id="sender-profiles" data-url="{{ url_for('courier_profiles') }}" data-mode="{{ profile_mode }}" {% if profile_mode == 'pickup' %}data-sender="{{ original.senderClient.name }}"{% endif %}>
+<div id="sender-profiles" data-url="{{ url_for('courier_profiles') }}" data-mode="{{ profile_mode }}" data-shop-city="{{ shop_sender_address.city }}" data-shop-post-code="{{ shop_sender_address.post_code }}" data-shop-address="{{ shop_sender_address.address }}" {% if profile_mode == 'pickup' %}data-sender="{{ original.senderClient.name }}"{% endif %}>
 <button class="btn btn-secondary" id="load-profiles" type="button">Зареди подателя от Еконт</button>
 <p id="profiles-status" role="status">Заредете профилите от свързания акаунт в Еконт и изберете подател.</p>
 <label for="profile-select">Профил в Еконт</label><select id="profile-select" disabled><option value="">Изберете профил</option></select>
 <label for="profile-address">Запазен адрес в Еконт</label><select id="profile-address" disabled><option value="">Изберете адрес</option></select>
 </div>
-<script src="{{ url_for('static', filename='js/courier_profiles.js', v='3') }}" defer></script>
+<script src="{{ url_for('static', filename='js/courier_profiles.js', v='4') }}" defer></script>

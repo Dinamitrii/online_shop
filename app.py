@@ -50,7 +50,8 @@ app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower
 app.config['COURIER_PROVIDER'] = os.environ.get('COURIER_PROVIDER', 'econt').lower()
 app.config['COURIER_ENVIRONMENT'] = os.environ.get('COURIER_ENVIRONMENT', 'test').lower()
 for key in ('ECONT_USERNAME', 'ECONT_PASSWORD', 'ECONT_SENDER_NAME',
-            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE'):
+            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE',
+            'ECONT_SENDER_CITY', 'ECONT_SENDER_POST_CODE', 'ECONT_SENDER_ADDRESS'):
     app.config[key] = os.environ.get(key, '')
 
 

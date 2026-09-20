@@ -175,6 +175,21 @@ class FixTests(unittest.TestCase):
         self.assertTrue(response.is_json)
         self.assertIn('error', response.get_json())
 
+    # ---- default sender = the shop address from .env ----
+    def test_sender_address_defaults_to_shop_address_from_env(self):
+        with patch.dict(app.config, ECONT_SENDER_NAME='Old environment sender', ECONT_SENDER_CITY='София',
+                        ECONT_SENDER_POST_CODE='1000', ECONT_SENDER_ADDRESS='бул. „Драган Цанков“ 59-63'):
+            page = self.c.get(self.url).text
+        self.assertIn('<option value="address" selected>', page)
+        self.assertIn('id="sender_city" name="sender_city" value="София"', page)
+        self.assertIn('id="sender_post_code" name="sender_post_code" value="1000"', page)
+        self.assertIn('Драган Цанков', page)
+        # name/phone still come from the Econt profile, never from .env
+        self.assertNotIn('Old environment sender', page)
+        # the JS falls back to the same address after choosing a profile
+        self.assertIn('data-shop-city="София"', page)
+        self.assertIn('data-shop-post-code="1000"', page)
+
     # ---- neutral wording in the live environment ----
     def test_error_text_does_not_claim_test_system(self):
         with patch('courier.EcontClient.label', side_effect=RuntimeError('x')):

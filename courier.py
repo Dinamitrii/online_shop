@@ -96,7 +96,10 @@ def save_status(shipment, status):
 def register_courier(app, admin_required):
     @app.context_processor
     def courier_context():
-        return {'courier_enabled': app.config.get('COURIER_ENABLED', False)}
+        return {'courier_enabled': app.config.get('COURIER_ENABLED', False),
+                'shop_sender_address': {'city': app.config.get('ECONT_SENDER_CITY', ''),
+                                        'post_code': app.config.get('ECONT_SENDER_POST_CODE', ''),
+                                        'address': app.config.get('ECONT_SENDER_ADDRESS', '')}}
 
     def protected_post(view):
         @wraps(view)
@@ -113,8 +116,13 @@ def register_courier(app, admin_required):
         shipment = CourierShipment.query.filter_by(order_id=order.id, environment=environment).first()
         session.setdefault('courier_csrf', secrets.token_urlsafe(32))
         if form is None:
+            # Адресът на подател по подразбиране е адресът на магазина (от .env). Името и телефонът
+            # идват от профила в Еконт (те трябва да съвпадат с акаунта), а офисът е по избор.
             form = {'sender_type': 'address', 'sender_name': '',
                     'sender_phone': '',
+                    'sender_city': app.config.get('ECONT_SENDER_CITY', ''),
+                    'sender_post_code': app.config.get('ECONT_SENDER_POST_CODE', ''),
+                    'sender_address': app.config.get('ECONT_SENDER_ADDRESS', ''),
                     'sender_office': app.config.get('ECONT_SENDER_OFFICE_CODE', ''),
                     'receiver_name': order.customer_name, 'receiver_phone': order.phone,
                     'address': order.address, 'delivery_type': 'office',

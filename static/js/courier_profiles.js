@@ -30,8 +30,11 @@
     if (!pickup) {
       set('sender_name', profile.name);
       set('sender_phone', profile.phones[0]);
-      // An address from another profile must not remain selected for this sender.
-      for (const id of ['sender_city', 'sender_post_code', 'sender_address']) set(id, '');
+      // An address from another profile must not remain selected for this sender:
+      // fall back to the shop address from .env (empty if it is not configured).
+      set('sender_city', root.dataset.shopCity);
+      set('sender_post_code', root.dataset.shopPostCode);
+      set('sender_address', root.dataset.shopAddress);
     }
     profile.addresses.forEach((a, i) => addresses.append(new Option(`${a.city} ${a.post_code} · ${a.address}`, String(i))));
     addresses.disabled = !profile.addresses.length;

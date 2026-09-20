@@ -1,0 +1,118 @@
+diff --git a/.env.example b/.env.example
+index 9f76806..55ed80f 100644
+--- a/.env.example
++++ b/.env.example
+@@ -11,6 +11,11 @@ COURIER_PROVIDER=econt
+ COURIER_ENVIRONMENT=test
+ ECONT_USERNAME=
+ ECONT_PASSWORD=
++# Подател по подразбиране = адресът на магазина (попълва се автоматично във формата за пратка).
+ ECONT_SENDER_NAME=
+ ECONT_SENDER_PHONE=
++ECONT_SENDER_CITY=
++ECONT_SENDER_POST_CODE=
++ECONT_SENDER_ADDRESS=
++# Само ако изпращате от офис на Еконт вместо от адрес:
+ ECONT_SENDER_OFFICE_CODE=
+diff --git a/app.py b/app.py
+index faeeb09..5c4c583 100644
+--- a/app.py
++++ b/app.py
+@@ -50,7 +50,8 @@ app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower
+ app.config['COURIER_PROVIDER'] = os.environ.get('COURIER_PROVIDER', 'econt').lower()
+ app.config['COURIER_ENVIRONMENT'] = os.environ.get('COURIER_ENVIRONMENT', 'test').lower()
+ for key in ('ECONT_USERNAME', 'ECONT_PASSWORD', 'ECONT_SENDER_NAME',
+-            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE'):
++            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE',
++            'ECONT_SENDER_CITY', 'ECONT_SENDER_POST_CODE', 'ECONT_SENDER_ADDRESS'):
+     app.config[key] = os.environ.get(key, '')
+ 
+ 
+diff --git a/courier.py b/courier.py
+index f11eabf..7d1b60e 100644
+--- a/courier.py
++++ b/courier.py
+@@ -96,7 +96,10 @@ def save_status(shipment, status):
+ def register_courier(app, admin_required):
+     @app.context_processor
+     def courier_context():
+-        return {'courier_enabled': app.config.get('COURIER_ENABLED', False)}
++        return {'courier_enabled': app.config.get('COURIER_ENABLED', False),
++                'shop_sender_address': {'city': app.config.get('ECONT_SENDER_CITY', ''),
++                                        'post_code': app.config.get('ECONT_SENDER_POST_CODE', ''),
++                                        'address': app.config.get('ECONT_SENDER_ADDRESS', '')}}
+ 
+     def protected_post(view):
+         @wraps(view)
+@@ -113,8 +116,13 @@ def register_courier(app, admin_required):
+         shipment = CourierShipment.query.filter_by(order_id=order.id, environment=environment).first()
+         session.setdefault('courier_csrf', secrets.token_urlsafe(32))
+         if form is None:
++            # Адресът на подател по подразбиране е адресът на магазина (от .env). Името и телефонът
++            # идват от профила в Еконт (те трябва да съвпадат с акаунта), а офисът е по избор.
+             form = {'sender_type': 'address', 'sender_name': '',
+                     'sender_phone': '',
++                    'sender_city': app.config.get('ECONT_SENDER_CITY', ''),
++                    'sender_post_code': app.config.get('ECONT_SENDER_POST_CODE', ''),
++                    'sender_address': app.config.get('ECONT_SENDER_ADDRESS', ''),
+                     'sender_office': app.config.get('ECONT_SENDER_OFFICE_CODE', ''),
+                     'receiver_name': order.customer_name, 'receiver_phone': order.phone,
+                     'address': order.address, 'delivery_type': 'office',
+diff --git a/static/js/courier_profiles.js b/static/js/courier_profiles.js
+index f2c1849..296ea97 100644
+--- a/static/js/courier_profiles.js
++++ b/static/js/courier_profiles.js
+@@ -30,8 +30,11 @@
+     if (!pickup) {
+       set('sender_name', profile.name);
+       set('sender_phone', profile.phones[0]);
+-      // An address from another profile must not remain selected for this sender.
+-      for (const id of ['sender_city', 'sender_post_code', 'sender_address']) set(id, '');
++      // An address from another profile must not remain selected for this sender:
++      // fall back to the shop address from .env (empty if it is not configured).
++      set('sender_city', root.dataset.shopCity);
++      set('sender_post_code', root.dataset.shopPostCode);
++      set('sender_address', root.dataset.shopAddress);
+     }
+     profile.addresses.forEach((a, i) => addresses.append(new Option(`${a.city} ${a.post_code} · ${a.address}`, String(i))));
+     addresses.disabled = !profile.addresses.length;
+diff --git a/templates/admin/courier_profiles.html b/templates/admin/courier_profiles.html
+index cb223e4..606a618 100644
+--- a/templates/admin/courier_profiles.html
++++ b/templates/admin/courier_profiles.html
+@@ -1,7 +1,7 @@
+-<div id="sender-profiles" data-url="{{ url_for('courier_profiles') }}" data-mode="{{ profile_mode }}" {% if profile_mode == 'pickup' %}data-sender="{{ original.senderClient.name }}"{% endif %}>
++<div id="sender-profiles" data-url="{{ url_for('courier_profiles') }}" data-mode="{{ profile_mode }}" data-shop-city="{{ shop_sender_address.city }}" data-shop-post-code="{{ shop_sender_address.post_code }}" data-shop-address="{{ shop_sender_address.address }}" {% if profile_mode == 'pickup' %}data-sender="{{ original.senderClient.name }}"{% endif %}>
+ <button class="btn btn-secondary" id="load-profiles" type="button">Зареди подателя от Еконт</button>
+ <p id="profiles-status" role="status">Заредете профилите от свързания акаунт в Еконт и изберете подател.</p>
+ <label for="profile-select">Профил в Еконт</label><select id="profile-select" disabled><option value="">Изберете профил</option></select>
+ <label for="profile-address">Запазен адрес в Еконт</label><select id="profile-address" disabled><option value="">Изберете адрес</option></select>
+ </div>
+-<script src="{{ url_for('static', filename='js/courier_profiles.js', v='3') }}" defer></script>
++<script src="{{ url_for('static', filename='js/courier_profiles.js', v='4') }}" defer></script>
+diff --git a/tests/test_courier_fixes.py b/tests/test_courier_fixes.py
+index 054c211..6fbd193 100644
+--- a/tests/test_courier_fixes.py
++++ b/tests/test_courier_fixes.py
+@@ -175,6 +175,21 @@ class FixTests(unittest.TestCase):
+         self.assertTrue(response.is_json)
+         self.assertIn('error', response.get_json())
+ 
++    # ---- default sender = the shop address from .env ----
++    def test_sender_address_defaults_to_shop_address_from_env(self):
++        with patch.dict(app.config, ECONT_SENDER_NAME='Old environment sender', ECONT_SENDER_CITY='София',
++                        ECONT_SENDER_POST_CODE='1000', ECONT_SENDER_ADDRESS='бул. „Драган Цанков“ 59-63'):
++            page = self.c.get(self.url).text
++        self.assertIn('<option value="address" selected>', page)
++        self.assertIn('id="sender_city" name="sender_city" value="София"', page)
++        self.assertIn('id="sender_post_code" name="sender_post_code" value="1000"', page)
++        self.assertIn('Драган Цанков', page)
++        # name/phone still come from the Econt profile, never from .env
++        self.assertNotIn('Old environment sender', page)
++        # the JS falls back to the same address after choosing a profile
++        self.assertIn('data-shop-city="София"', page)
++        self.assertIn('data-shop-post-code="1000"', page)
++
+     # ---- neutral wording in the live environment ----
+     def test_error_text_does_not_claim_test_system(self):
+         with patch('courier.EcontClient.label', side_effect=RuntimeError('x')):
