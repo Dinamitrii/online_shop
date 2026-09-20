@@ -6,7 +6,7 @@ from functools import wraps
 
 from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for, send_file
 from sqlalchemy.exc import IntegrityError
-from models import db, Order, CourierShipment
+from models import db, Order, CourierShipment, CourierAction
 from econt import EcontClient, EcontError, safe_pdf_url
 
 
@@ -28,7 +28,6 @@ def build_label(order, form):
     label = {
         'senderClient': {'name': required(form, 'sender_name', 'име на подателя'),
                          'phones': [required(form, 'sender_phone', 'телефон на подателя', 50)]},
-        'senderOfficeCode': required(form, 'sender_office', 'офис на изпращане', 20),
         'receiverClient': {'name': required(form, 'receiver_name', 'име на получателя'),
                            'phones': [required(form, 'receiver_phone', 'телефон на получателя', 50)]},
         'packCount': packs, 'weight': float(weight), 'shipmentType': 'pack',
@@ -37,6 +36,18 @@ def build_label(order, form):
             f'{item.product_name} x{item.qty}' for item in order.items)[:180],
         'paymentSenderMethod': 'cash',
     }
+    sender_type = form.get('sender_type', 'office')
+    if sender_type == 'office':
+        label['senderOfficeCode'] = required(form, 'sender_office', 'офис на изпращане', 20)
+    elif sender_type == 'address':
+        label['senderAddress'] = {
+            'city': {'country': {'code3': 'BGR'},
+                     'name': required(form, 'sender_city', 'населено място на подателя', 100),
+                     'postCode': required(form, 'sender_post_code', 'пощенски код на подателя', 10)},
+            'fullAddress': required(form, 'sender_address', 'адрес на подателя', 300),
+        }
+    else:
+        raise ValueError('Изберете изпращане от офис или адрес.')
     delivery = form.get('delivery_type')
     if delivery == 'office':
         label['receiverOfficeCode'] = required(form, 'receiver_office', 'офис на получаване', 20)
@@ -92,19 +103,31 @@ def register_courier(app, admin_required):
         shipment = CourierShipment.query.filter_by(order_id=order.id, environment=environment).first()
         session.setdefault('courier_csrf', secrets.token_urlsafe(32))
         if form is None:
-            form = {'sender_name': app.config.get('ECONT_SENDER_NAME', ''),
-                    'sender_phone': app.config.get('ECONT_SENDER_PHONE', ''),
+            form = {'sender_type': 'address', 'sender_name': '',
+                    'sender_phone': '',
                     'sender_office': app.config.get('ECONT_SENDER_OFFICE_CODE', ''),
                     'receiver_name': order.customer_name, 'receiver_phone': order.phone,
                     'address': order.address, 'delivery_type': 'office',
                     'pack_count': '1', 'payer': 'receiver', 'cod': '1'}
         return render_template('admin/courier.html', order=order, shipment=shipment,
-                               form=form, quote=quote, error=error, environment=environment), code
+                               form=form, quote=quote, error=error, environment=environment,
+                               actions=CourierAction.query.filter_by(shipment_id=shipment.id).all() if shipment else []), code
 
     @app.route('/admin/orders/<int:order_id>/econt', methods=['GET'])
     @admin_required
     def courier_order(order_id):
         return render_order(Order.query.get_or_404(order_id))
+
+    @app.route('/admin/econt/profiles')
+    @admin_required
+    def courier_profiles():
+        try:
+            response = jsonify(profiles=EcontClient(app.config).profiles())
+        except EcontError as exc:
+            response = jsonify(error=str(exc))
+            response.status_code = 502
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     @app.route('/admin/econt/offices')
     @admin_required
@@ -195,6 +218,8 @@ def register_courier(app, admin_required):
         try:
             client = EcontClient(app.config)
             shipment = CourierShipment.query.filter_by(order_id=order.id, environment=client.environment).first_or_404()
+            if shipment.state not in ('created', 'pending', 'uncertain'):
+                raise ValueError('Първо изяснете резултата от действието към Еконт.')
             number = shipment.shipment_number
             if not number:
                 if shipment.state not in ('pending', 'uncertain'):
@@ -249,3 +274,126 @@ def register_courier(app, admin_required):
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
+
+    @app.route('/admin/orders/<int:order_id>/econt/action/<kind>', methods=['GET', 'POST'])
+    @admin_required
+    def courier_action(order_id, kind):
+        if kind not in ('cancel', 'pickup'):
+            abort(404)
+        order = Order.query.get_or_404(order_id)
+        environment = app.config['COURIER_ENVIRONMENT']
+        shipment = CourierShipment.query.filter_by(order_id=order_id, environment=environment).first_or_404()
+        session.setdefault('courier_csrf', secrets.token_urlsafe(32))
+        original = json.loads(shipment.request_json)
+        action = CourierAction.query.filter_by(shipment_id=shipment.id, kind=kind).first()
+        form = request.form.to_dict() if request.method == 'POST' else {}
+        if request.method == 'GET' and kind == 'pickup':
+            sender_address = original.get('senderAddress') or {}
+            sender_city = sender_address.get('city') or {}
+            form = {'city': sender_city.get('name') or '',
+                    'post_code': sender_city.get('postCode') or '',
+                    'address': sender_address.get('fullAddress') or ''}
+        def page(error=None, code=200):
+            return render_template('admin/courier_action.html', order=order, shipment=shipment,
+                                   kind=kind, action=action, form=form, original=original,
+                                   environment=environment, error=error), code
+        if request.method == 'GET':
+            return page()
+        if not secrets.compare_digest(session['courier_csrf'], form.get('csrf_token', '')):
+            abort(400)
+        if form.get('confirm') != str(shipment.id):
+            return page('Потвърдете действието за тази товарителница.', 400)
+        if shipment.state != 'created' or (action and action.state != 'failed'):
+            return page('Действието вече е изпълнено или очаква проверка. Не е изпратена нова заявка.', 409)
+        try:
+            client = EcontClient(app.config)
+            payload = {'shipmentNumbers': [shipment.shipment_number]}
+            if kind == 'pickup':
+                from datetime import datetime
+                from zoneinfo import ZoneInfo
+                if order.status in ('отказана', 'завършена', 'изпратена'):
+                    raise ValueError('Не може да заявите вземане за изпратена, завършена или отказана поръчка.')
+                tz = ZoneInfo('Europe/Sofia')
+                start = datetime.fromisoformat(required(form, 'time_from', 'начало на интервала', 25)).replace(tzinfo=tz)
+                end = datetime.fromisoformat(required(form, 'time_to', 'край на интервала', 25)).replace(tzinfo=tz)
+                if start <= datetime.now(tz) or end <= start or start.date() != end.date():
+                    raise ValueError('Изберете бъдещ интервал в рамките на един ден по българско време.')
+                payload = {
+                    'requestTimeFrom': int(start.timestamp() * 1000),
+                    'requestTimeTo': int(end.timestamp() * 1000),
+                    'shipmentType': original['shipmentType'],
+                    'shipmentPackCount': original['packCount'],
+                    'shipmentWeight': original['weight'],
+                    'senderClient': original['senderClient'],
+                    'senderAddress': {'city': {'country': {'code3': 'BGR'},
+                                              'name': required(form, 'city', 'населено място', 100),
+                                              'postCode': required(form, 'post_code', 'пощенски код', 10)},
+                                      'fullAddress': required(form, 'address', 'адрес за вземане', 300)},
+                    'attachShipments': [shipment.shipment_number],
+                }
+        except (ValueError, EcontError) as exc:
+            return page(str(exc), 400)
+        # This shared reservation serializes cancellation and pickup across workers.
+        claimed = CourierShipment.query.filter_by(id=shipment.id, state='created').update(
+            {'state': kind + '_pending'}, synchronize_session=False)
+        if not claimed:
+            db.session.rollback()
+            return page('Друга заявка вече обработва тази пратка.', 409)
+        if action is None:
+            action = CourierAction(shipment_id=shipment.id, kind=kind)
+            db.session.add(action)
+        action.state = 'pending'
+        action.request_json = json.dumps(payload, ensure_ascii=False)
+        action.message = ''
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return page('Действието вече е заявено.', 409)
+        try:
+            if kind == 'cancel':
+                client.cancel_label(shipment.shipment_number)
+                shipment.state = 'cancelled'
+                shipment.delivery_status = 'Анулирана в Еконт'
+                shipment.pdf_url = ''
+                action.message = 'Еконт потвърди анулирането на товарителницата.'
+            else:
+                action.request_id, warning = client.request_courier(payload)
+                shipment.state = 'created'
+                action.message = 'Заявката е приета от Еконт.' + (' ' + warning if warning else '')
+            action.state = 'succeeded'
+            shipment.error_message = ''
+        except EcontError as exc:
+            action.state = 'uncertain' if exc.uncertain else 'failed'
+            shipment.state = kind + '_unknown' if exc.uncertain else 'created'
+            action.message = str(exc)
+            shipment.error_message = str(exc)
+        except Exception:
+            current_app.logger.exception('Unexpected courier action result')
+            action.state = 'uncertain'
+            shipment.state = kind + '_unknown'
+            action.message = 'Резултатът не е потвърден. Проверете в Еконт преди ново действие.'
+            shipment.error_message = action.message
+        db.session.commit()
+        flash(action.message, 'success' if action.state == 'succeeded' else 'error')
+        return redirect(url_for('courier_order', order_id=order_id))
+
+    @app.route('/admin/orders/<int:order_id>/econt/pickup-status', methods=['POST'])
+    @admin_required
+    @protected_post
+    def courier_pickup_status(order_id):
+        shipment = CourierShipment.query.filter_by(order_id=order_id, environment=app.config['COURIER_ENVIRONMENT']).first_or_404()
+        action = CourierAction.query.filter_by(shipment_id=shipment.id, kind='pickup', state='succeeded').first_or_404()
+        names = {'unprocess': 'Очаква обработка', 'process': 'Назначен е куриер',
+                 'taken': 'Пратката е взета', 'reject': 'Заявката е отменена', 'reject_client': 'Отменена от клиента'}
+        try:
+            status = EcontClient(app.config).courier_request_status(action.request_id)
+            action.message = names.get(status.get('status'), 'Непознат статус от Еконт')
+            for key in ('note', 'reject_reason'):
+                if status.get(key):
+                    action.message += ' · ' + str(status[key])[:500]
+            db.session.commit()
+            flash(action.message, 'success')
+        except EcontError as exc:
+            flash(str(exc), 'error')
+        return redirect(url_for('courier_order', order_id=order_id))

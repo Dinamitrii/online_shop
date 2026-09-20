@@ -12,6 +12,23 @@ class EcontError(Exception):
         self.uncertain = uncertain
 
 
+def error_message(error):
+    """Read Econt's nested validation messages, including blank parent errors."""
+    messages = []
+    def collect(node, depth=0):
+        if not isinstance(node, dict) or depth > 10 or len(messages) >= 20:
+            return
+        message = node.get('message')
+        if isinstance(message, str) and message.strip() and message.strip() not in messages:
+            messages.append(message.strip())
+        children = node.get('innerErrors')
+        if isinstance(children, list):
+            for child in children[:20]:
+                collect(child, depth + 1)
+    collect(error)
+    return ' '.join(messages)[:500] or 'Невалидни данни за пратката. Проверете подател, получател и офисите.'
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -51,7 +68,7 @@ class EcontClient:
             except (ValueError, UnicodeError, OSError, AttributeError):
                 fault = {}
             if isinstance(fault, dict) and fault.get('type') == 'ExInvalidParam':
-                raise EcontError('Еконт: ' + str(fault.get('message', 'Невалидни данни.'))[:500]) from None
+                raise EcontError('Еконт: ' + error_message(fault)) from None
             if exc.code in (401, 403):
                 raise EcontError('Еконт отказа достъпа. Проверете акаунта и средата.') from None
             # A server error may happen after the shipment has already been created.
@@ -69,7 +86,7 @@ class EcontClient:
         error = result.get('error') or (result if result.get('type') and result.get('message') else None)
         if error:
             # Jinja escapes this message; never include request credentials or full response.
-            message = error.get('message', 'Невалидни данни.') if isinstance(error, dict) else 'Невалидни данни.'
+            message = error_message(error)
             raise EcontError('Еконт: ' + str(message)[:500])
         return result
 
@@ -88,6 +105,33 @@ class EcontClient:
         if str(status.get('shipmentNumber')) != number:
             raise EcontError('Номерът на върнатата товарителница не съвпада.')
         return status
+
+
+    def profiles(self):
+        result = self.call('Profile/ProfileService.getClientProfiles', {})
+        profiles = result.get('profiles')
+        if not isinstance(profiles, list):
+            raise EcontError('Еконт не върна валиден списък с профили.')
+        output = []
+        for profile in profiles:
+            if not isinstance(profile, dict) or not isinstance(profile.get('client'), dict):
+                continue
+            client = profile['client']
+            addresses = []
+            for address in profile.get('addresses') or []:
+                if not isinstance(address, dict):
+                    continue
+                city = address.get('city') or {}
+                country = city.get('country') or {}
+                if (country.get('code3') or country.get('code2')) not in ('BG', 'BGR'):
+                    continue
+                full = address.get('fullAddress') or ' '.join(str(address.get(key) or '').strip() for key in ('quarter', 'street', 'num', 'other')).strip()
+                addresses.append({'city': str(city.get('name') or ''),
+                                  'post_code': str(city.get('postCode') or ''), 'address': full})
+            output.append({'name': str(client.get('name') or ''),
+                           'phones': [str(phone) for phone in client.get('phones') or []],
+                           'addresses': addresses})
+        return output
 
 
     def cancel_label(self, number):
