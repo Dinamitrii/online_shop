@@ -18,6 +18,7 @@
 <label for="city">Населено място</label><input id="city" name="city" value="{{ form.get('city', '') }}" maxlength="100" required>
 <label for="post_code">Пощенски код</label><input id="post_code" name="post_code" value="{{ form.get('post_code', '') }}" maxlength="10" required>
 <label for="address">Точен адрес за вземане</label><input id="address" name="address" value="{{ form.get('address', '') }}" maxlength="300" required>
+<p class="field-hint">Сега е {{ now_sofia.strftime('%d.%m.%Y %H:%M') }} (българско време). Изберете интервал в бъдещето, в рамките на един ден.</p>
 <label for="time_from">Може да бъде взета от</label><input id="time_from" type="datetime-local" name="time_from" value="{{ form.get('time_from', '') }}" required>
 <label for="time_to">Може да бъде взета до</label><input id="time_to" type="datetime-local" name="time_to" value="{{ form.get('time_to', '') }}" required>
 {% endif %}

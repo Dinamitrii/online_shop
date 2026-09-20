@@ -4,6 +4,7 @@ import secrets
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import wraps
+from zoneinfo import ZoneInfo
 
 from flask import abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for, send_file
 from sqlalchemy.exc import IntegrityError
@@ -318,7 +319,8 @@ def register_courier(app, admin_required):
         def page(error=None, code=200):
             return render_template('admin/courier_action.html', order=order, shipment=shipment,
                                    kind=kind, action=action, form=form, original=original,
-                                   environment=environment, error=error), code
+                                   environment=environment, error=error,
+                                   now_sofia=datetime.now(ZoneInfo('Europe/Sofia'))), code
         if request.method == 'GET':
             return page()
         if not safe_equal(session['courier_csrf'], form.get('csrf_token', '')):
@@ -331,14 +333,19 @@ def register_courier(app, admin_required):
             client = EcontClient(app.config)
             payload = {'shipmentNumbers': [shipment.shipment_number]}
             if kind == 'pickup':
-                from zoneinfo import ZoneInfo
                 if order.status in ('отказана', 'завършена', 'изпратена'):
                     raise ValueError('Не може да заявите вземане за изпратена, завършена или отказана поръчка.')
                 tz = ZoneInfo('Europe/Sofia')
                 start = datetime.fromisoformat(required(form, 'time_from', 'начало на интервала', 25)).replace(tzinfo=tz)
                 end = datetime.fromisoformat(required(form, 'time_to', 'край на интервала', 25)).replace(tzinfo=tz)
-                if start <= datetime.now(tz) or end <= start or start.date() != end.date():
-                    raise ValueError('Изберете бъдещ интервал в рамките на един ден по българско време.')
+                now = datetime.now(tz)
+                if start <= now:
+                    raise ValueError(f'Началото ({start:%d.%m.%Y %H:%M}) трябва да е в бъдещето. '
+                                     f'Сега е {now:%d.%m.%Y %H:%M} (българско време).')
+                if end <= start:
+                    raise ValueError(f'Краят ({end:%d.%m.%Y %H:%M}) трябва да е след началото ({start:%d.%m.%Y %H:%M}).')
+                if start.date() != end.date():
+                    raise ValueError('Началото и краят трябва да са в един и същи ден.')
                 payload = {
                     'requestTimeFrom': int(start.timestamp() * 1000),
                     'requestTimeTo': int(end.timestamp() * 1000),

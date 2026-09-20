@@ -190,6 +190,35 @@ class FixTests(unittest.TestCase):
         self.assertIn('data-shop-city="София"', page)
         self.assertIn('data-shop-post-code="1000"', page)
 
+    # ---- pickup interval validation explains what is wrong ----
+    def test_pickup_interval_errors_are_specific(self):
+        self.created(); url = self.url + '/action/pickup'
+        day = (datetime.now(ZoneInfo('Europe/Sofia')) + timedelta(days=3)).strftime('%Y-%m-%d')
+        past = (datetime.now(ZoneInfo('Europe/Sofia')) - timedelta(days=1)).strftime('%Y-%m-%d')
+        cases = [
+            ({'time_from': f'{past}T10:00', 'time_to': f'{past}T12:00'}, 'трябва да е в бъдещето'),
+            ({'time_from': f'{day}T12:00', 'time_to': f'{day}T10:00'}, 'трябва да е след началото'),
+            ({'time_from': f'{day}T10:00', 'time_to': f'{day}T10:00'}, 'трябва да е след началото'),
+        ]
+        with patch('courier.EcontClient.request_courier') as api:
+            for fields, expected in cases:
+                response = self.c.post(url, data={**self.action_form, **fields})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(expected, response.text)
+            next_day = (datetime.now(ZoneInfo('Europe/Sofia')) + timedelta(days=4)).strftime('%Y-%m-%d')
+            response = self.c.post(url, data={**self.action_form, 'time_from': f'{day}T22:00',
+                                              'time_to': f'{next_day}T02:00'})
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('в един и същи ден', response.text)
+            api.assert_not_called()
+        self.assertIn('българско време', self.c.get(url).text)  # current time hint is shown
+        # seconds in the value (some browsers) are accepted too
+        with patch('courier.EcontClient.request_courier', return_value=('9', '')) as api:
+            response = self.c.post(url, data={**self.action_form, 'time_from': f'{day}T10:00:00',
+                                              'time_to': f'{day}T12:00:00'})
+            self.assertEqual(response.status_code, 302)
+            api.assert_called_once()
+
     # ---- neutral wording in the live environment ----
     def test_error_text_does_not_claim_test_system(self):
         with patch('courier.EcontClient.label', side_effect=RuntimeError('x')):
