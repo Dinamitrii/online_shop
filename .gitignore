@@ -4,6 +4,9 @@
 # Виртуална среда
 venv/
 env/
+.venv/
+.env/
+
 
 # Python
 __pycache__/
