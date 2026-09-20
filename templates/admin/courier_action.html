@@ -1,0 +1,32 @@
+{% extends 'admin/base.html' %}
+{% block title %}{{ 'Анулиране в Еконт' if kind == 'cancel' else 'Заявяване на куриер' }}{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ 'Анулиране в Еконт' if kind == 'cancel' else 'Заяви куриер' }}</h1>
+<section class="admin-panel">
+<p>Поръчка #{{ order.id }} · Товарителница <strong>{{ shipment.shipment_number }}</strong> · {{ 'ТЕСТОВА среда' if environment == 'test' else 'РЕАЛНА среда' }}</p>
+{% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
+{% if shipment.state == 'created' and (not action or action.state == 'failed') %}
+<form method="post" class="admin-form">
+<input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+{% if kind == 'cancel' %}
+<p>Ще изпратим искане за анулиране на тази товарителница към Еконт. Поръчката остава в магазина. Еконт може да откаже анулиране според състоянието на пратката.</p>
+<p>Ако вече е заявено посещение на куриер, анулирането на товарителницата не потвърждава отмяната на посещението. Уточнете го с Еконт.</p>
+{% else %}
+<p>Подател: {{ original.senderClient.name }} · {{ original.senderClient.phones | join(', ') }}</p>
+<p>Посочете адреса, от който куриерът трябва да вземе пратката. Часовете са по българско време. Приемането на заявката не означава, че куриерът вече е взел пратката.</p>
+<label for="city">Населено място</label><input id="city" name="city" value="{{ form.get('city', '') }}" maxlength="100" required>
+<label for="post_code">Пощенски код</label><input id="post_code" name="post_code" value="{{ form.get('post_code', '') }}" maxlength="10" required>
+<label for="address">Точен адрес за вземане</label><input id="address" name="address" value="{{ form.get('address', '') }}" maxlength="300" required>
+<label for="time_from">Може да бъде взета от</label><input id="time_from" type="datetime-local" name="time_from" value="{{ form.get('time_from', '') }}" required>
+<label for="time_to">Може да бъде взета до</label><input id="time_to" type="datetime-local" name="time_to" value="{{ form.get('time_to', '') }}" required>
+{% endif %}
+<label><input type="checkbox" name="confirm" value="{{ shipment.id }}" required> Потвърждавам {{ 'анулирането в Еконт' if kind == 'cancel' else 'заявяването на куриер за посочения адрес и интервал' }}{{ ' в тестова среда' if environment == 'test' else ' в реална среда' }}.</label>
+<button class="btn" type="submit">{{ 'Анулирай в Еконт' if kind == 'cancel' else 'Изпрати заявка за куриер' }}</button>
+</form>
+{% else %}
+<p>{{ action.message if action else shipment.error_message or 'Действието не е налично за тази пратка.' }}</p>
+<p>Не е изпратена повторна заявка. При непотвърден резултат проверете в e-Econt или се свържете с Еконт.</p>
+{% endif %}
+<a class="btn btn-secondary" href="{{ url_for('courier_order', order_id=order.id) }}">Назад към товарителницата</a>
+</section>
+{% endblock %}

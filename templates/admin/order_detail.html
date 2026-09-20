@@ -57,4 +57,5 @@
 </div>
 
 <a href="{{ url_for('admin_orders') }}" class="btn btn-secondary" style="margin-top:20px;display:inline-block;">← Всички поръчки</a>
+<a href="{{ url_for('admin_order_delete', order_id=order.id) }}" class="btn btn-secondary" style="margin-top:20px;display:inline-block;">Изтрий поръчката</a>
 {% endblock %}

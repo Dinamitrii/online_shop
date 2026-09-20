@@ -6,10 +6,10 @@ import io
 import uuid
 import secrets
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from models import db, Category, Product, Order, OrderItem
+from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -737,6 +737,42 @@ def admin_orders_export():
 def admin_order_detail(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template('admin/order_detail.html', order=order, statuses=Order.STATUSES)
+
+
+@app.route('/admin/orders/<int:order_id>/delete', methods=['GET', 'POST'])
+@admin_required
+def admin_order_delete(order_id):
+    order = Order.query.get_or_404(order_id)
+    shipments = CourierShipment.query.filter_by(order_id=order_id).all()
+    blocked = any(shipment.state in ('pending', 'uncertain', 'cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') for shipment in shipments)
+    if request.method == 'GET':
+        session.setdefault('order_delete_csrf', secrets.token_urlsafe(32))
+        return render_template('admin/order_delete.html', order=order,
+                               shipments=shipments, blocked=blocked)
+    token = session.get('order_delete_csrf', '')
+    if not token or not secrets.compare_digest(token, request.form.get('csrf_token', '')):
+        abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
+    if request.form.get('confirm_order_id') != str(order_id):
+        abort(400, 'Потвърдете изтриването на поръчката.')
+    if blocked:
+        flash('Първо проверете чакащата или непотвърдената заявка към Еконт.', 'error')
+        return redirect(url_for('admin_order_delete', order_id=order_id))
+    # Delete dependent records and the order in one transaction; products stay intact.
+    try:
+        shipment_ids = [shipment.id for shipment in shipments]
+        if shipment_ids:
+            CourierAction.query.filter(CourierAction.shipment_id.in_(shipment_ids)).delete(synchronize_session=False)
+        CourierShipment.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+        OrderItem.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+        db.session.delete(order)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        app.logger.exception('Failed to delete order %s', order_id)
+        flash('Поръчката не беше изтрита. Опитайте отново.', 'error')
+        return redirect(url_for('admin_order_detail', order_id=order_id))
+    flash(f'Поръчка #{order_id} беше изтрита.', 'success')
+    return redirect(url_for('admin_orders'))
 
 
 @app.route('/admin/orders/<int:order_id>/status', methods=['POST'])

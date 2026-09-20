@@ -11,10 +11,28 @@
 <div class="flash flash-warning"><strong>Реална среда на Еконт.</strong> „Създай товарителница“ регистрира пратка при куриера.</div>
 {% endif %}
 {% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if actions %}
+<section class="admin-panel">
+{% for action in actions %}
+<p><strong>{{ 'Анулиране' if action.kind == 'cancel' else 'Заявка за куриер' }}{% if action.request_id %} № {{ action.request_id }}{% endif %}</strong>: {{ action.message or 'Изпращане на заявката…' }}</p>
+{% if action.state in ('pending', 'uncertain') %}<p>Не повтаряйте заявката. Проверете резултата в e-Econt или с Еконт.</p>{% endif %}
+{% if action.kind == 'pickup' and action.state == 'succeeded' %}
+<form method="post" action="{{ url_for('courier_pickup_status', order_id=order.id) }}">
+<input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+<button class="btn btn-secondary" type="submit">Провери заявката за куриер</button>
+</form>
+{% endif %}
+{% endfor %}
+</section>
+{% endif %}
 {% if shipment and shipment.state == 'created' %}
 <section class="admin-panel">
     <h2>Товарителница № {{ shipment.shipment_number }}</h2>
     <p>{{ shipment.delivery_status }}</p>
+    <div class="admin-form-actions">
+        <a class="btn btn-secondary" href="{{ url_for('courier_action', order_id=order.id, kind='pickup') }}">Заяви куриер</a>
+        <a class="btn btn-secondary" href="{{ url_for('courier_action', order_id=order.id, kind='cancel') }}">Анулирай в Еконт</a>
+    </div>
     {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
     <form method="post" action="{{ url_for('courier_refresh', order_id=order.id) }}" style="margin-top:16px">
         <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
@@ -22,6 +40,10 @@
     </form>
     <p class="field-hint">PDF се отваря в нов раздел. Използвайте бутона за печат на PDF прегледа.</p>
 </section>
+{% elif shipment and shipment.state == 'cancelled' %}
+<section class="admin-panel"><h2>Товарителница № {{ shipment.shipment_number }} е анулирана</h2><p>Еконт потвърди анулирането. Поръчката остава запазена в магазина.</p></section>
+{% elif shipment and shipment.state in ('cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') %}
+<section class="admin-panel"><h2>Действието към Еконт очаква проверка</h2><p>{{ shipment.error_message or 'Заявката е изпратена. Изчакайте отговора.' }}</p><p>Проверете резултата в e-Econt или с Еконт. Повторното изпращане е блокирано.</p></section>
 {% elif shipment and shipment.state in ('pending', 'uncertain') %}
 <section class="admin-panel">
     <h2>Заявката очаква проверка</h2>

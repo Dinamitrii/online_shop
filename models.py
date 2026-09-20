@@ -80,3 +80,17 @@ class CourierShipment(db.Model):
     request_json = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CourierAction(db.Model):
+    """Persist external operations before sending them; never retry an unknown result."""
+    __tablename__ = 'courier_actions'
+    __table_args__ = (db.UniqueConstraint('shipment_id', 'kind'),)
+    id = db.Column(db.Integer, primary_key=True)
+    shipment_id = db.Column(db.Integer, db.ForeignKey('courier_shipments.id'), nullable=False)
+    kind = db.Column(db.String(16), nullable=False)
+    state = db.Column(db.String(16), nullable=False, default='pending')
+    request_id = db.Column(db.String(64), default='')
+    request_json = db.Column(db.Text, nullable=False, default='{}')
+    message = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
