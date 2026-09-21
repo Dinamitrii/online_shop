@@ -55,6 +55,7 @@
                     </select>
                 </form>
                 <a href="{{ url_for('admin_order_detail', order_id=o.id) }}" class="btn btn-small">Детайли</a>
+                <a href="{{ url_for('admin_order_delete', order_id=o.id) }}" class="btn btn-small btn-secondary">Изтрий</a>
             </td>
         </tr>
         {% endfor %}

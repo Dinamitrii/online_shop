@@ -6,10 +6,10 @@ import io
 import uuid
 import secrets
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from models import db, Category, Product, Order, OrderItem
+from models import db, Category, Product, Order, OrderItem, CourierShipment
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -737,6 +737,42 @@ def admin_orders_export():
 def admin_order_detail(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template('admin/order_detail.html', order=order, statuses=Order.STATUSES)
+
+
+@app.route('/admin/orders/<int:order_id>/delete', methods=['GET', 'POST'])
+@admin_required
+def admin_order_delete(order_id):
+    order = Order.query.get_or_404(order_id)
+    shipments = CourierShipment.query.filter_by(order_id=order_id).all()
+    # Заявка към Еконт с неясен резултат: не трием, за да не изгубим следата за пратката.
+    blocked = any(shipment.state in ('pending', 'uncertain') for shipment in shipments)
+    if request.method == 'GET':
+        session.setdefault('order_delete_csrf', secrets.token_urlsafe(32))
+        return render_template('admin/order_delete.html', order=order,
+                               shipments=shipments, blocked=blocked)
+    token = session.get('order_delete_csrf', '')
+    # .encode(): compare_digest не приема не-ASCII текст (иначе вместо 400 се получава 500).
+    if not token or not secrets.compare_digest(token.encode('utf-8'),
+                                               request.form.get('csrf_token', '').encode('utf-8')):
+        abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
+    if request.form.get('confirm_order_id') != str(order_id):
+        abort(400, 'Потвърдете изтриването на поръчката.')
+    if blocked:
+        flash('Първо проверете чакащата или непотвърдената заявка към Еконт.', 'error')
+        return redirect(url_for('admin_order_delete', order_id=order_id))
+    # Свързаните записи и поръчката се трият в една транзакция; продуктите остават непроменени.
+    try:
+        CourierShipment.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+        OrderItem.query.filter_by(order_id=order_id).delete(synchronize_session=False)
+        db.session.delete(order)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        app.logger.exception('Failed to delete order %s', order_id)
+        flash('Поръчката не беше изтрита. Опитайте отново.', 'error')
+        return redirect(url_for('admin_order_detail', order_id=order_id))
+    flash(f'Поръчка #{order_id} беше изтрита.', 'success')
+    return redirect(url_for('admin_orders'))
 
 
 @app.route('/admin/orders/<int:order_id>/status', methods=['POST'])

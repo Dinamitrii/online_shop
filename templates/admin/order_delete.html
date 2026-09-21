@@ -1,0 +1,23 @@
+{% extends 'admin/base.html' %}
+{% block title %}Изтриване на поръчка #{{ order.id }}{% endblock %}
+{% block content %}
+<h1 class="page-title">Изтриване на поръчка #{{ order.id }}</h1>
+<section class="admin-panel">
+    <p><strong>{{ order.customer_name }}</strong> · {{ order.created_at.strftime('%d.%m.%Y %H:%M') }} · {{ '%.2f'|format(order.total) }} €</p>
+    <p>Поръчката, артикулите в нея и локалните записи за товарителници ще бъдат изтрити окончателно. Продуктите в каталога и наличностите остават непроменени.</p>
+    {% if shipments %}
+    <p><strong>Изтриването от магазина не анулира пратка в Еконт.</strong> Запазете нужните документи преди изтриване.</p>
+    <ul>{% for shipment in shipments %}<li>{{ 'Тестова' if shipment.environment == 'test' else 'Реална' }} пратка: {{ shipment.shipment_number or 'без потвърден номер' }} — {{ shipment.delivery_status or shipment.state }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if blocked %}
+    <p role="alert">Има чакаща или непотвърдена заявка към Еконт. Проверете резултата ѝ преди изтриване.</p>
+    {% else %}
+    <form method="post" action="{{ url_for('admin_order_delete', order_id=order.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ session.order_delete_csrf }}">
+        <label><input type="checkbox" name="confirm_order_id" value="{{ order.id }}" required> Потвърждавам окончателното изтриване на поръчка #{{ order.id }}.</label>
+        <div style="margin-top:16px"><button type="submit" class="btn">Изтрий окончателно</button></div>
+    </form>
+    {% endif %}
+    <a href="{{ url_for('admin_order_detail', order_id=order.id) }}" class="btn btn-secondary" style="margin-top:16px">Назад към поръчката</a>
+</section>
+{% endblock %}
