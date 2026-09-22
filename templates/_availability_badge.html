@@ -1,0 +1,8 @@
+{# Малък етикет за статуса на наличност в решетките с продукти (начало/категория/търсене). #}
+{% if p.stock > 0 %}
+<span class="availability-chip {{ availability_badge_class[p.availability] }}">
+    {{ availability_icons[p.availability] }} {{ availability_labels[p.availability] }}
+</span>
+{% else %}
+<span class="availability-chip stock-out">✘ Изчерпан</span>
+{% endif %}

@@ -43,7 +43,7 @@ app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 
 # Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
 # за да не показва браузърът стар кеширан style.css след ъпдейт.
-app.config['ASSET_VERSION'] = '9'
+app.config['ASSET_VERSION'] = '10'
 
 # Courier settings: disabled unless explicitly enabled in the local .env.
 app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower() == 'true'
@@ -80,6 +80,13 @@ CATEGORY_ICONS = {
 @app.context_processor
 def inject_category_icons():
     return {'category_icons': CATEGORY_ICONS}
+
+
+@app.context_processor
+def inject_availability_info():
+    return {'availability_labels': Product.AVAILABILITY_LABELS,
+            'availability_badge_class': Product.AVAILABILITY_BADGE_CLASS,
+            'availability_icons': Product.AVAILABILITY_ICONS}
 
 
 def allowed_file(filename):
@@ -132,6 +139,18 @@ def admin_required(view_func):
 def get_cart():
     """Връща количката като dict {product_id(str): quantity}"""
     return session.setdefault('cart', {})
+
+
+def availability_limit_message(product, capped_qty):
+    """Съобщение при надвишен лимит, с различна формулировка за 'limited' и 'on_order'."""
+    if product.availability == 'on_order':
+        return (f'"{product.name}": по поръчка може да се заявят максимум {capped_qty} бр. '
+               f'В количката са добавени {capped_qty} бр.')
+    if product.availability == 'limited':
+        return (f'"{product.name}": ограничена наличност — максимум {capped_qty} бр. '
+               f'В количката са добавени {capped_qty} бр.')
+    return (f'"{product.name}": наличен е максимум {capped_qty} бр. '
+           f'В количката са добавени {capped_qty} бр.')
 
 
 def cart_items_with_products():
@@ -296,13 +315,26 @@ def product_view(product_id):
 @app.route('/cart/add/<int:product_id>', methods=['POST'])
 def cart_add(product_id):
     product = Product.query.get_or_404(product_id)
-    qty = max(1, int(request.form.get('qty', 1)))
+    # И за трите статуса (В наличност / Ограничена наличност / По поръчка) полето stock
+    # е максималният брой, който в момента може да се поръча.
+    if not product.in_stock_for_order:
+        flash(f'"{product.name}" не е наличен в момента.', 'error')
+        return redirect(request.referrer or url_for('index'))
+    try:
+        qty = max(1, int(request.form.get('qty', 1)))
+    except ValueError:
+        qty = 1
     cart = get_cart()
     key = str(product_id)
-    cart[key] = cart.get(key, 0) + qty
+    wanted = cart.get(key, 0) + qty
+    if wanted > product.stock:
+        wanted = product.stock
+        flash(availability_limit_message(product, wanted), 'error')
+    else:
+        flash(f'"{product.name}" е добавен в количката.', 'success')
+    cart[key] = wanted
     session['cart'] = cart
     session.modified = True
-    flash(f'"{product.name}" е добавен в количката.', 'success')
     return redirect(request.referrer or url_for('index'))
 
 
@@ -310,11 +342,21 @@ def cart_add(product_id):
 def cart_update(product_id):
     cart = get_cart()
     key = str(product_id)
-    qty = int(request.form.get('qty', 1))
+    try:
+        qty = int(request.form.get('qty', 1))
+    except ValueError:
+        qty = 1
     if qty <= 0:
         cart.pop(key, None)
     else:
-        cart[key] = qty
+        product = Product.query.get(product_id)
+        if product and qty > product.stock:
+            qty = product.stock
+            flash(availability_limit_message(product, qty), 'error')
+        if qty <= 0:
+            cart.pop(key, None)
+        else:
+            cart[key] = qty
     session['cart'] = cart
     session.modified = True
     return redirect(url_for('cart_view'))
@@ -460,6 +502,11 @@ def admin_product_new():
             stock = int(stock_raw)
         except ValueError:
             error = 'Невалидна наличност.'
+        try:
+            availability = parse_availability(request.form)
+        except ValueError as e:
+            error = error or str(e)
+            availability = 'in_stock'
 
         image_url = ''
         if not error:
@@ -475,7 +522,7 @@ def admin_product_new():
             return render_template('admin/product_form.html', categories=categories,
                                    product=None, form=request.form)
 
-        product = Product(name=name, price=price, stock=stock,
+        product = Product(name=name, price=price, stock=stock, availability=availability,
                           category_id=category_id, description=description,
                           image_url=image_url)
         db.session.add(product)
@@ -512,6 +559,11 @@ def admin_product_edit(product_id):
             stock = int(stock_raw)
         except ValueError:
             error = 'Невалидна наличност.'
+        try:
+            availability = parse_availability(request.form)
+        except ValueError as e:
+            error = error or str(e)
+            availability = product.availability
 
         new_image_url = None
         if not error:
@@ -528,6 +580,7 @@ def admin_product_edit(product_id):
         product.name = name
         product.price = price
         product.stock = stock
+        product.availability = availability
         product.category_id = request.form.get('category_id')
         product.description = request.form.get('description', '').strip()
 
@@ -868,6 +921,14 @@ def seed_data():
     db.session.commit()
 
 
+def parse_availability(form):
+    """Валидира стойността на статуса за наличност от админ формата за продукт."""
+    value = form.get('availability', 'in_stock')
+    if value not in Product.AVAILABILITY_CHOICES:
+        raise ValueError('Невалиден статус на наличност.')
+    return value
+
+
 def migrate_db():
     """Лека автоматична миграция — добавя колони, добавени след първото пускане
     на проекта, ако вече съществува по-стара база данни (store.db)."""
@@ -881,6 +942,11 @@ def migrate_db():
         category_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(categories)"))]
         if 'image_url' not in category_cols:
             conn.execute(text("ALTER TABLE categories ADD COLUMN image_url VARCHAR(300) DEFAULT ''"))
+            conn.commit()
+
+        product_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(products)"))]
+        if 'availability' not in product_cols:
+            conn.execute(text("ALTER TABLE products ADD COLUMN availability VARCHAR(16) DEFAULT 'in_stock'"))
             conn.commit()
 
 

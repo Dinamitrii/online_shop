@@ -401,6 +401,31 @@ a {
     font-weight: 600;
 }
 
+.stock-limited {
+    color: #b5680a;
+    font-weight: 600;
+}
+
+.stock-onorder {
+    color: #1565c0;
+    font-weight: 600;
+}
+
+.availability-chip {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin: 4px 0;
+}
+
+.availability-chip.stock-ok { background: #e5f5e6; }
+.availability-chip.stock-limited { background: #fff3e0; }
+.availability-chip.stock-onorder { background: #e3f0fd; }
+.availability-chip.stock-out { background: #fdecea; }
+
 .add-form {
     display: flex;
     align-items: center;
