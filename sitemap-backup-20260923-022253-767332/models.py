@@ -16,11 +16,6 @@ class Category(db.Model):
     def __repr__(self):
         return f'<Category {self.name}>'
 
-    updated_at = db.Column(
-        db.DateTime, nullable=True,
-        default=datetime.utcnow, onupdate=datetime.utcnow
-    )
-
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -51,11 +46,6 @@ class Product(db.Model):
 
     def __repr__(self):
         return f'<Product {self.name}>'
-
-    updated_at = db.Column(
-        db.DateTime, nullable=True,
-        default=datetime.utcnow, onupdate=datetime.utcnow
-    )
 
 
 class Order(db.Model):
