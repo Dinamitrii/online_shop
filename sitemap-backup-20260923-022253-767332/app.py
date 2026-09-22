@@ -1,6 +1,3 @@
-# Sitemap XML imports v1
-from datetime import timezone
-from xml.etree.ElementTree import Element, SubElement, tostring
 import os
 import json
 import tempfile
@@ -938,20 +935,6 @@ def parse_availability(form):
 def migrate_db():
     """Лека автоматична миграция — добавя колони, добавени след първото пускане
     на проекта, ако вече съществува по-стара база данни (store.db)."""
-    # Automatic sitemap lastmod migration v1
-    from sqlalchemy import text as sitemap_sql
-    with db.engine.begin() as sitemap_conn:
-        for sitemap_table in ('products', 'categories'):
-            sitemap_columns = {
-                row[1] for row in sitemap_conn.execute(
-                    sitemap_sql(f'PRAGMA table_info({sitemap_table})')
-                )
-            }
-            if sitemap_columns and 'updated_at' not in sitemap_columns:
-                sitemap_conn.execute(sitemap_sql(
-                    f'ALTER TABLE {sitemap_table} ADD COLUMN updated_at DATETIME'
-                ))
-
     from sqlalchemy import text
     with db.engine.connect() as conn:
         order_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(orders)"))]
