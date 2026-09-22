@@ -6,13 +6,14 @@ import io
 import uuid
 import secrets
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, \
+    abort
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
 from security import safe_equal, safe_next_url
+from datetime import timezone
 from xml.etree.ElementTree import Element, SubElement, tostring
-
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -27,7 +28,8 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.environ.get('SHOP_DATABASE_PATH', os.path.join(BASE_DIR, 'store.db'))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.environ.get('SHOP_DATABASE_PATH',
+                                                                      os.path.join(BASE_DIR, 'store.db'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
@@ -55,7 +57,6 @@ for key in ('ECONT_USERNAME', 'ECONT_PASSWORD', 'ECONT_SENDER_NAME',
             'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE',
             'ECONT_SENDER_CITY', 'ECONT_SENDER_POST_CODE', 'ECONT_SENDER_ADDRESS'):
     app.config[key] = os.environ.get(key, '')
-
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -147,12 +148,12 @@ def availability_limit_message(product, capped_qty):
     """Съобщение при надвишен лимит, с различна формулировка за 'limited' и 'on_order'."""
     if product.availability == 'on_order':
         return (f'"{product.name}": по поръчка може да се заявят максимум {capped_qty} бр. '
-               f'В количката са добавени {capped_qty} бр.')
+                f'В количката са добавени {capped_qty} бр.')
     if product.availability == 'limited':
         return (f'"{product.name}": ограничена наличност — максимум {capped_qty} бр. '
-               f'В количката са добавени {capped_qty} бр.')
+                f'В количката са добавени {capped_qty} бр.')
     return (f'"{product.name}": наличен е максимум {capped_qty} бр. '
-           f'В количката са добавени {capped_qty} бр.')
+            f'В количката са добавени {capped_qty} бр.')
 
 
 def cart_items_with_products():
@@ -189,7 +190,6 @@ CATEGORY_SORTS = {
     'count_asc': 'Брой продукти: малко → много',
     'count_desc': 'Брой продукти: много → малко',
 }
-
 
 ORDER_SORTS = {
     'newest': 'Най-нови', 'oldest': 'Най-стари',
@@ -806,7 +806,8 @@ def admin_order_detail(order_id):
 def admin_order_delete(order_id):
     order = Order.query.get_or_404(order_id)
     shipments = CourierShipment.query.filter_by(order_id=order_id).all()
-    blocked = any(shipment.state in ('pending', 'uncertain', 'cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') for shipment in shipments)
+    blocked = any(shipment.state in ('pending', 'uncertain', 'cancel_pending', 'cancel_unknown', 'pickup_pending',
+                                     'pickup_unknown') for shipment in shipments)
     if request.method == 'GET':
         session.setdefault('order_delete_csrf', secrets.token_urlsafe(32))
         return render_template('admin/order_delete.html', order=order,
@@ -969,8 +970,6 @@ def static_from_root():
 
 @app.route('/sitemap.xml')
 def sitemap_xml():
-    # Фиксираният публичен адрес гарантира HTTPS линкове,
-    # включително когато приложението работи зад reverse proxy.
     site_url = 'https://e-jelezaria.bg'
 
     root = Element(
@@ -978,40 +977,42 @@ def sitemap_xml():
         xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'
     )
 
-    def add_url(endpoint, **values):
-        path = url_for(endpoint, _external=False, **values)
+    def add_url(endpoint, lastmod=None, **values):
         entry = SubElement(root, 'url')
+
+        path = url_for(endpoint, _external=False, **values)
         SubElement(entry, 'loc').text = site_url + path
 
-    # Основни публични страници.
+        if lastmod is not None:
+            # Датите в базата се пазят в UTC.
+            if lastmod.tzinfo is None:
+                lastmod = lastmod.replace(tzinfo=timezone.utc)
+
+            SubElement(entry, 'lastmod').text = (
+                lastmod.astimezone(timezone.utc)
+                .isoformat(timespec='seconds')
+                .replace('+00:00', 'Z')
+            )
+
     add_url('index')
     add_url('contacts')
 
-    # Вземаме само ID-тата — не зареждаме описания и снимки.
-    categories = (
-        db.session.query(Category.id)
-        .order_by(Category.id)
-        .all()
-    )
-    for (category_id,) in categories:
-        add_url('category_view', category_id=category_id)
+    for category in Category.query.order_by(Category.id).all():
+        add_url(
+            'category_view',
+            category_id=category.id,
+            lastmod=getattr(category, 'updated_at', None)
+        )
 
-    products = (
-        db.session.query(Product.id)
-        .order_by(Product.id)
-        .all()
-    )
-    for (product_id,) in products:
-        add_url('product_view', product_id=product_id)
-
-    xml = tostring(
-        root,
-        encoding='utf-8',
-        xml_declaration=True
-    )
+    for product in Product.query.order_by(Product.id).all():
+        add_url(
+            'product_view',
+            product_id=product.id,
+            lastmod=getattr(product, 'updated_at', None)
+        )
 
     return Response(
-        xml,
+        tostring(root, encoding='utf-8', xml_declaration=True),
         content_type='application/xml; charset=utf-8',
         headers={'Cache-Control': 'no-store'}
     )
@@ -1052,12 +1053,9 @@ def favicon():
             url_for('static', filename='img/favicon/manifest.json'))
 
 
-
-
-
 from courier import register_courier
-register_courier(app, admin_required)
 
+register_courier(app, admin_required)
 
 if __name__ == '__main__':
     with app.app_context():
