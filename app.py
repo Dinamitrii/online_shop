@@ -11,6 +11,8 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
 from security import safe_equal, safe_next_url
+from xml.etree.ElementTree import Element, SubElement, tostring
+
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -960,11 +962,60 @@ def init_db_command():
 
 
 # The code below lets the Flask server respond to crawler request for robots.txt and sitemap files
-
 @app.route('/robots.txt')
-@app.route('/sitemap.xml')
 def static_from_root():
-    return send_from_directory(app.static_folder, request.path[1:])
+    return send_from_directory(app.static_folder, 'robots.txt')
+
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    # Фиксираният публичен адрес гарантира HTTPS линкове,
+    # включително когато приложението работи зад reverse proxy.
+    site_url = 'https://e-jelezaria.bg'
+
+    root = Element(
+        'urlset',
+        xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'
+    )
+
+    def add_url(endpoint, **values):
+        path = url_for(endpoint, _external=False, **values)
+        entry = SubElement(root, 'url')
+        SubElement(entry, 'loc').text = site_url + path
+
+    # Основни публични страници.
+    add_url('index')
+    add_url('contacts')
+
+    # Вземаме само ID-тата — не зареждаме описания и снимки.
+    categories = (
+        db.session.query(Category.id)
+        .order_by(Category.id)
+        .all()
+    )
+    for (category_id,) in categories:
+        add_url('category_view', category_id=category_id)
+
+    products = (
+        db.session.query(Product.id)
+        .order_by(Product.id)
+        .all()
+    )
+    for (product_id,) in products:
+        add_url('product_view', product_id=product_id)
+
+    xml = tostring(
+        root,
+        encoding='utf-8',
+        xml_declaration=True
+    )
+
+    return Response(
+        xml,
+        content_type='application/xml; charset=utf-8',
+        headers={'Cache-Control': 'no-store'}
+    )
+
 
 @app.route("/favicon.ico")
 def favicon():
