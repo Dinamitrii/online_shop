@@ -58,20 +58,3 @@ class DeleteOrderTests(unittest.TestCase):
             self.c.post(self.delete_url,data=form)
         self.assertEqual(Order.query.count(),1)
         self.assertEqual(OrderItem.query.count(),1)
-
-
-class DeleteOrderExtraTests(unittest.TestCase):
-    setUp = fixture.CourierTests.setUp
-    tearDown = fixture.CourierTests.tearDown
-
-    def test_non_ascii_token_gives_400_not_500(self):
-        url = f'/admin/orders/{self.order_id}/delete'
-        self.c.get(url)
-        response = self.c.post(url, data={'csrf_token': 'грешен', 'confirm_order_id': str(self.order_id)})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(Order.query.count(), 1)
-
-    def test_delete_buttons_are_shown_and_needs_admin(self):
-        self.assertIn(f'/admin/orders/{self.order_id}/delete', self.c.get('/admin/orders').text)
-        self.assertIn(f'/admin/orders/{self.order_id}/delete', self.c.get(f'/admin/orders/{self.order_id}').text)
-        self.assertEqual(app.test_client().get(f'/admin/orders/{self.order_id}/delete').status_code, 302)

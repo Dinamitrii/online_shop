@@ -37,6 +37,7 @@
             <th>Категория</th>
             <th>Цена</th>
             <th>Наличност</th>
+            <th>Статус</th>
             <th></th>
         </tr>
     </thead>
@@ -48,6 +49,7 @@
             <td>{{ p.category.name }}</td>
             <td>{{ '%.2f'|format(p.price) }} €</td>
             <td class="{% if p.stock <= 5 %}stock-low{% endif %}">{{ p.stock }}</td>
+            <td><span class="availability-chip {{ availability_badge_class[p.availability] }}">{{ availability_icons[p.availability] }} {{ availability_labels[p.availability] }}</span></td>
             <td class="admin-actions">
                 <a href="{{ url_for('admin_product_edit', product_id=p.id) }}" class="btn btn-small">Редакция</a>
                 <form action="{{ url_for('admin_product_delete', product_id=p.id) }}" method="post"

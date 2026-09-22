@@ -25,8 +25,24 @@ class Product(db.Model):
     description = db.Column(db.Text, default='')
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
+    # 'in_stock' (обикновена наличност), 'limited' (ограничена — предупреждение, но поръчваема),
+    # 'on_order' (по поръчка — брои се същото поле 'stock', но означава наличен за поръчка брой).
+    availability = db.Column(db.String(16), nullable=False, default='in_stock')
     image_url = db.Column(db.String(300), default='')
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+
+    AVAILABILITY_CHOICES = ('in_stock', 'limited', 'on_order')
+    AVAILABILITY_LABELS = {'in_stock': 'В наличност', 'limited': 'Ограничена наличност',
+                           'on_order': 'По поръчка'}
+    # CSS клас (static/css/style.css) и икона за етикета на статуса — за витрината и админ панела.
+    AVAILABILITY_BADGE_CLASS = {'in_stock': 'stock-ok', 'limited': 'stock-limited', 'on_order': 'stock-onorder'}
+    AVAILABILITY_ICONS = {'in_stock': '✔', 'limited': '⚠', 'on_order': '⏳'}
+
+    @property
+    def in_stock_for_order(self):
+        """Дали продуктът може да се поръча в момента — важи и за трите статуса,
+        включително „По поръчка“, чиято наличност също е ограничена от полето stock."""
+        return self.stock > 0
 
     def __repr__(self):
         return f'<Product {self.name}>'
@@ -80,3 +96,17 @@ class CourierShipment(db.Model):
     request_json = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class CourierAction(db.Model):
+    """Persist external operations before sending them; never retry an unknown result."""
+    __tablename__ = 'courier_actions'
+    __table_args__ = (db.UniqueConstraint('shipment_id', 'kind'),)
+    id = db.Column(db.Integer, primary_key=True)
+    shipment_id = db.Column(db.Integer, db.ForeignKey('courier_shipments.id'), nullable=False)
+    kind = db.Column(db.String(16), nullable=False)
+    state = db.Column(db.String(16), nullable=False, default='pending')
+    request_id = db.Column(db.String(64), default='')
+    request_json = db.Column(db.Text, nullable=False, default='{}')
+    message = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

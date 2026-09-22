@@ -9,7 +9,8 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from models import db, Category, Product, Order, OrderItem, CourierShipment
+from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
+from security import safe_equal, safe_next_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
@@ -30,20 +31,27 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
 # Парола за админ панела — вземи се от .env, с fallback за удобство при първо пускане.
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'admin123')
+if app.config['ADMIN_PASSWORD'] == 'admin123':
+    app.logger.warning('ADMIN_PASSWORD не е зададена в .env — използва се паролата по подразбиране. '
+                       'Сменете я преди публикуване.')
+
+# Сесийната бисквитка не се изпраща при cross-site POST заявки (допълнителна защита срещу CSRF).
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # WhatsApp номер за бутона за жив чат (код на държава + номер, без + и интервали).
 app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 
 # Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
 # за да не показва браузърът стар кеширан style.css след ъпдейт.
-app.config['ASSET_VERSION'] = '9'
+app.config['ASSET_VERSION'] = '10'
 
 # Courier settings: disabled unless explicitly enabled in the local .env.
 app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower() == 'true'
 app.config['COURIER_PROVIDER'] = os.environ.get('COURIER_PROVIDER', 'econt').lower()
 app.config['COURIER_ENVIRONMENT'] = os.environ.get('COURIER_ENVIRONMENT', 'test').lower()
 for key in ('ECONT_USERNAME', 'ECONT_PASSWORD', 'ECONT_SENDER_NAME',
-            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE'):
+            'ECONT_SENDER_PHONE', 'ECONT_SENDER_OFFICE_CODE',
+            'ECONT_SENDER_CITY', 'ECONT_SENDER_POST_CODE', 'ECONT_SENDER_ADDRESS'):
     app.config[key] = os.environ.get(key, '')
 
 
@@ -72,6 +80,13 @@ CATEGORY_ICONS = {
 @app.context_processor
 def inject_category_icons():
     return {'category_icons': CATEGORY_ICONS}
+
+
+@app.context_processor
+def inject_availability_info():
+    return {'availability_labels': Product.AVAILABILITY_LABELS,
+            'availability_badge_class': Product.AVAILABILITY_BADGE_CLASS,
+            'availability_icons': Product.AVAILABILITY_ICONS}
 
 
 def allowed_file(filename):
@@ -124,6 +139,18 @@ def admin_required(view_func):
 def get_cart():
     """Връща количката като dict {product_id(str): quantity}"""
     return session.setdefault('cart', {})
+
+
+def availability_limit_message(product, capped_qty):
+    """Съобщение при надвишен лимит, с различна формулировка за 'limited' и 'on_order'."""
+    if product.availability == 'on_order':
+        return (f'"{product.name}": по поръчка може да се заявят максимум {capped_qty} бр. '
+               f'В количката са добавени {capped_qty} бр.')
+    if product.availability == 'limited':
+        return (f'"{product.name}": ограничена наличност — максимум {capped_qty} бр. '
+               f'В количката са добавени {capped_qty} бр.')
+    return (f'"{product.name}": наличен е максимум {capped_qty} бр. '
+           f'В количката са добавени {capped_qty} бр.')
 
 
 def cart_items_with_products():
@@ -288,13 +315,26 @@ def product_view(product_id):
 @app.route('/cart/add/<int:product_id>', methods=['POST'])
 def cart_add(product_id):
     product = Product.query.get_or_404(product_id)
-    qty = max(1, int(request.form.get('qty', 1)))
+    # И за трите статуса (В наличност / Ограничена наличност / По поръчка) полето stock
+    # е максималният брой, който в момента може да се поръча.
+    if not product.in_stock_for_order:
+        flash(f'"{product.name}" не е наличен в момента.', 'error')
+        return redirect(request.referrer or url_for('index'))
+    try:
+        qty = max(1, int(request.form.get('qty', 1)))
+    except ValueError:
+        qty = 1
     cart = get_cart()
     key = str(product_id)
-    cart[key] = cart.get(key, 0) + qty
+    wanted = cart.get(key, 0) + qty
+    if wanted > product.stock:
+        wanted = product.stock
+        flash(availability_limit_message(product, wanted), 'error')
+    else:
+        flash(f'"{product.name}" е добавен в количката.', 'success')
+    cart[key] = wanted
     session['cart'] = cart
     session.modified = True
-    flash(f'"{product.name}" е добавен в количката.', 'success')
     return redirect(request.referrer or url_for('index'))
 
 
@@ -302,11 +342,21 @@ def cart_add(product_id):
 def cart_update(product_id):
     cart = get_cart()
     key = str(product_id)
-    qty = int(request.form.get('qty', 1))
+    try:
+        qty = int(request.form.get('qty', 1))
+    except ValueError:
+        qty = 1
     if qty <= 0:
         cart.pop(key, None)
     else:
-        cart[key] = qty
+        product = Product.query.get(product_id)
+        if product and qty > product.stock:
+            qty = product.stock
+            flash(availability_limit_message(product, qty), 'error')
+        if qty <= 0:
+            cart.pop(key, None)
+        else:
+            cart[key] = qty
     session['cart'] = cart
     session.modified = True
     return redirect(url_for('cart_view'))
@@ -388,11 +438,10 @@ def order_confirmation(order_id):
 def admin_login():
     if request.method == 'POST':
         password = request.form.get('password', '')
-        if password == app.config['ADMIN_PASSWORD']:
+        if safe_equal(password, app.config['ADMIN_PASSWORD']):
             session['is_admin'] = True
             flash('Влязохте успешно.', 'success')
-            next_url = request.form.get('next') or url_for('admin_dashboard')
-            return redirect(next_url)
+            return redirect(safe_next_url(request.form.get('next'), url_for('admin_dashboard')))
         flash('Грешна парола.', 'error')
     next_url = request.args.get('next', '')
     return render_template('admin/login.html', next_url=next_url)
@@ -453,6 +502,11 @@ def admin_product_new():
             stock = int(stock_raw)
         except ValueError:
             error = 'Невалидна наличност.'
+        try:
+            availability = parse_availability(request.form)
+        except ValueError as e:
+            error = error or str(e)
+            availability = 'in_stock'
 
         image_url = ''
         if not error:
@@ -468,7 +522,7 @@ def admin_product_new():
             return render_template('admin/product_form.html', categories=categories,
                                    product=None, form=request.form)
 
-        product = Product(name=name, price=price, stock=stock,
+        product = Product(name=name, price=price, stock=stock, availability=availability,
                           category_id=category_id, description=description,
                           image_url=image_url)
         db.session.add(product)
@@ -505,6 +559,11 @@ def admin_product_edit(product_id):
             stock = int(stock_raw)
         except ValueError:
             error = 'Невалидна наличност.'
+        try:
+            availability = parse_availability(request.form)
+        except ValueError as e:
+            error = error or str(e)
+            availability = product.availability
 
         new_image_url = None
         if not error:
@@ -521,6 +580,7 @@ def admin_product_edit(product_id):
         product.name = name
         product.price = price
         product.stock = stock
+        product.availability = availability
         product.category_id = request.form.get('category_id')
         product.description = request.form.get('description', '').strip()
 
@@ -744,24 +804,24 @@ def admin_order_detail(order_id):
 def admin_order_delete(order_id):
     order = Order.query.get_or_404(order_id)
     shipments = CourierShipment.query.filter_by(order_id=order_id).all()
-    # Заявка към Еконт с неясен резултат: не трием, за да не изгубим следата за пратката.
-    blocked = any(shipment.state in ('pending', 'uncertain') for shipment in shipments)
+    blocked = any(shipment.state in ('pending', 'uncertain', 'cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') for shipment in shipments)
     if request.method == 'GET':
         session.setdefault('order_delete_csrf', secrets.token_urlsafe(32))
         return render_template('admin/order_delete.html', order=order,
                                shipments=shipments, blocked=blocked)
     token = session.get('order_delete_csrf', '')
-    # .encode(): compare_digest не приема не-ASCII текст (иначе вместо 400 се получава 500).
-    if not token or not secrets.compare_digest(token.encode('utf-8'),
-                                               request.form.get('csrf_token', '').encode('utf-8')):
+    if not token or not safe_equal(token, request.form.get('csrf_token', '')):
         abort(400, 'Невалидна или изтекла форма. Презаредете страницата.')
     if request.form.get('confirm_order_id') != str(order_id):
         abort(400, 'Потвърдете изтриването на поръчката.')
     if blocked:
         flash('Първо проверете чакащата или непотвърдената заявка към Еконт.', 'error')
         return redirect(url_for('admin_order_delete', order_id=order_id))
-    # Свързаните записи и поръчката се трият в една транзакция; продуктите остават непроменени.
+    # Delete dependent records and the order in one transaction; products stay intact.
     try:
+        shipment_ids = [shipment.id for shipment in shipments]
+        if shipment_ids:
+            CourierAction.query.filter(CourierAction.shipment_id.in_(shipment_ids)).delete(synchronize_session=False)
         CourierShipment.query.filter_by(order_id=order_id).delete(synchronize_session=False)
         OrderItem.query.filter_by(order_id=order_id).delete(synchronize_session=False)
         db.session.delete(order)
@@ -861,6 +921,14 @@ def seed_data():
     db.session.commit()
 
 
+def parse_availability(form):
+    """Валидира стойността на статуса за наличност от админ формата за продукт."""
+    value = form.get('availability', 'in_stock')
+    if value not in Product.AVAILABILITY_CHOICES:
+        raise ValueError('Невалиден статус на наличност.')
+    return value
+
+
 def migrate_db():
     """Лека автоматична миграция — добавя колони, добавени след първото пускане
     на проекта, ако вече съществува по-стара база данни (store.db)."""
@@ -874,6 +942,11 @@ def migrate_db():
         category_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(categories)"))]
         if 'image_url' not in category_cols:
             conn.execute(text("ALTER TABLE categories ADD COLUMN image_url VARCHAR(300) DEFAULT ''"))
+            conn.commit()
+
+        product_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(products)"))]
+        if 'availability' not in product_cols:
+            conn.execute(text("ALTER TABLE products ADD COLUMN availability VARCHAR(16) DEFAULT 'in_stock'"))
             conn.commit()
 
 

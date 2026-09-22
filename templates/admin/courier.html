@@ -11,10 +11,29 @@
 <div class="flash flash-warning"><strong>Реална среда на Еконт.</strong> „Създай товарителница“ регистрира пратка при куриера.</div>
 {% endif %}
 {% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if actions %}
+<section class="admin-panel">
+{% for action in actions %}
+<p><strong>{{ 'Анулиране' if action.kind == 'cancel' else 'Заявка за куриер' }}{% if action.request_id %} № {{ action.request_id }}{% endif %}</strong>: {{ action.message or 'Изпращане на заявката…' }}</p>
+{% if action.state in ('pending', 'uncertain') %}<p>Не повтаряйте заявката. Проверете резултата в e-Econt или с Еконт.</p>{% endif %}
+{% if action.kind == 'pickup' and action.state == 'rejected' %}<p>Заявката е отхвърлена — можете да заявите куриер отново.</p>{% endif %}
+{% if action.kind == 'pickup' and action.state == 'succeeded' %}
+<form method="post" action="{{ url_for('courier_pickup_status', order_id=order.id) }}">
+<input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+<button class="btn btn-secondary" type="submit">Провери заявката за куриер</button>
+</form>
+{% endif %}
+{% endfor %}
+</section>
+{% endif %}
 {% if shipment and shipment.state == 'created' %}
 <section class="admin-panel">
     <h2>Товарителница № {{ shipment.shipment_number }}</h2>
     <p>{{ shipment.delivery_status }}</p>
+    <div class="admin-form-actions">
+        <a class="btn btn-secondary" href="{{ url_for('courier_action', order_id=order.id, kind='pickup') }}">Заяви куриер</a>
+        <a class="btn btn-secondary" href="{{ url_for('courier_action', order_id=order.id, kind='cancel') }}">Анулирай в Еконт</a>
+    </div>
     {% if shipment.pdf_url %}<a class="btn" target="_blank" rel="noopener noreferrer" href="{{ url_for('courier_pdf', order_id=order.id) }}">Отвори PDF / Печат</a>{% endif %}
     <div class="admin-form-actions" style="margin-top:16px">
         {% for fmt, title in [('docx', 'Word (.docx)'), ('xlsx', 'Excel (.xlsx)'), ('csv', 'CSV')] %}
@@ -27,6 +46,28 @@
         <button class="btn btn-secondary" type="submit">Обнови статус / PDF</button>
     </form>
     <p class="field-hint">PDF се отваря в нов раздел. Използвайте бутона за печат на PDF прегледа.</p>
+</section>
+{% elif shipment and shipment.state == 'cancelled' %}
+<section class="admin-panel"><h2>Товарителница № {{ shipment.shipment_number }} е анулирана</h2><p>Еконт потвърди анулирането. Поръчката остава запазена в магазина.</p></section>
+{% elif shipment and shipment.state in ('cancel_pending', 'cancel_unknown', 'pickup_pending', 'pickup_unknown') %}
+<section class="admin-panel">
+    <h2>Действието към Еконт очаква проверка</h2>
+    <p>{{ shipment.error_message or 'Заявката е изпратена. Изчакайте отговора.' }}</p>
+    <p>Проверете резултата в e-Econt или с Еконт. Повторното изпращане е блокирано, докато не запишете резултата.</p>
+    {% set kind = shipment.state.split('_')[0] %}
+    <form class="admin-form" method="post" action="{{ url_for('courier_resolve', order_id=order.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
+        <h3>Записване на резултата от e-Econt</h3>
+        <label><input type="radio" name="outcome" value="not_done" required> {{ 'Анулирането НЕ е изпълнено — товарителницата е активна' if kind == 'cancel' else 'Заявката за куриер НЕ е приета' }}</label>
+        <label><input type="radio" name="outcome" value="done" required> {{ 'Товарителницата Е анулирана' if kind == 'cancel' else 'Заявката за куриер Е приета' }}</label>
+        {% if kind == 'pickup' %}
+        <label for="request_id">Номер на заявката за куриер (само ако е приета)</label>
+        <input id="request_id" name="request_id" maxlength="64">
+        {% endif %}
+        <label><input type="checkbox" name="confirm" value="{{ shipment.id }}" required> Проверих резултата в e-Econt.</label>
+        <button class="btn" type="submit">Запази резултата</button>
+        <p class="field-hint">Нищо не се изпраща към Еконт. Ако заявката е била изпратена преди по-малко от 2 минути, изчакайте.</p>
+    </form>
 </section>
 {% elif shipment and shipment.state in ('pending', 'uncertain') %}
 <section class="admin-panel">
@@ -44,13 +85,23 @@
 {% if quote %}<div class="flash flash-success" role="status">Ориентировъчна доставка: <strong>{{ quote.totalPrice }} {{ quote.currency }}</strong>. Товарителница още не е създадена.</div>{% endif %}
 <form class="admin-form" method="post" id="courier-form">
     <input type="hidden" name="csrf_token" value="{{ session.courier_csrf }}">
-    <h2>Подател · изпращане от офис</h2>
+    <h2>Подател</h2>
+    {% set profile_mode = 'label' %}{% include 'admin/courier_profiles.html' %}
     <label for="sender_name">Име / фирма</label>
     <input id="sender_name" name="sender_name" value="{{ form.get('sender_name', '') }}" maxlength="150" required>
     <label for="sender_phone">Телефон</label>
     <input id="sender_phone" name="sender_phone" value="{{ form.get('sender_phone', '') }}" maxlength="50" required>
+    <label for="sender_type">Изпращане от</label>
+    <select id="sender_type" name="sender_type"><option value="office" {% if form.get('sender_type', 'address') == 'office' %}selected{% endif %}>Офис на Еконт</option><option value="address" {% if form.get('sender_type', 'address') == 'address' %}selected{% endif %}>Адрес на подателя</option></select>
+    <div id="sender-address-fields">
+    {% for field, title, limit in [('sender_city', 'Населено място на подателя', 100), ('sender_post_code', 'Пощенски код на подателя', 10), ('sender_address', 'Адрес на подателя', 300)] %}
+    <label for="{{ field }}">{{ title }}</label><input id="{{ field }}" name="{{ field }}" value="{{ form.get(field, '') }}" maxlength="{{ limit }}">
+    {% endfor %}
+    </div>
+    <div id="sender-office-fields">
     <label for="sender_office">Офис на изпращане</label>
-    <input id="sender_office" name="sender_office" list="econt-offices" value="{{ form.get('sender_office', '') }}" placeholder="Код на офис" maxlength="20" required>
+    <input id="sender_office" name="sender_office" list="econt-offices" value="{{ form.get('sender_office', '') }}" placeholder="Код на офис" maxlength="20">
+    </div>
     <button class="btn btn-small btn-secondary" type="button" id="load-offices" data-url="{{ url_for('courier_offices') }}">Зареди офисите на Еконт</button>
     <small id="offices-status" role="status">След зареждане потърсете офис по име или код в полетата за офис.</small>
     <datalist id="econt-offices"></datalist>

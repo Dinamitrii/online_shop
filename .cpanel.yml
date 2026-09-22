@@ -1,5 +1,5 @@
 ---
-### cPanel Git deployment for the live Flask/Passenger application.
+# cPanel Git deployment for the live Flask/Passenger application.
 # Production data (.env, store.db, category-order.json and uploaded images)
 # is preserved.
 

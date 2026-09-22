@@ -19,8 +19,17 @@
             <label for="stock">Наличност *</label>
             <input type="number" id="stock" name="stock" min="0" required
                    value="{{ form.stock if form else (product.stock if product is not none else 0) }}">
+            <small class="field-hint">За „По поръчка“ броят означава колко може да се заявят в момента.</small>
         </div>
     </div>
+
+    <label for="availability">Статус на наличност *</label>
+    {% set selected_availability = (form.availability if form else (product.availability if product else 'in_stock')) %}
+    <select id="availability" name="availability" required>
+        {% for value, label in availability_labels.items() %}
+        <option value="{{ value }}" {% if selected_availability == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
 
     <label for="category_id">Категория *</label>
     <select id="category_id" name="category_id" required>

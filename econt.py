@@ -107,6 +107,61 @@ class EcontClient:
         return status
 
 
+    def profiles(self):
+        result = self.call('Profile/ProfileService.getClientProfiles', {})
+        profiles = result.get('profiles')
+        if not isinstance(profiles, list):
+            raise EcontError('Еконт не върна валиден списък с профили.')
+        output = []
+        for profile in profiles:
+            if not isinstance(profile, dict) or not isinstance(profile.get('client'), dict):
+                continue
+            client = profile['client']
+            addresses = []
+            for address in profile.get('addresses') or []:
+                if not isinstance(address, dict):
+                    continue
+                city = address.get('city') or {}
+                country = city.get('country') or {}
+                if (country.get('code3') or country.get('code2')) not in ('BG', 'BGR'):
+                    continue
+                full = address.get('fullAddress') or ' '.join(str(address.get(key) or '').strip() for key in ('quarter', 'street', 'num', 'other')).strip()
+                addresses.append({'city': str(city.get('name') or ''),
+                                  'post_code': str(city.get('postCode') or ''), 'address': full})
+            output.append({'name': str(client.get('name') or ''),
+                           'phones': [str(phone) for phone in client.get('phones') or []],
+                           'addresses': addresses})
+        return output
+
+
+    def cancel_label(self, number):
+        result = self.call('Shipments/LabelService.deleteLabels', {'shipmentNumbers': [number]})
+        rows = result.get('results')
+        if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict) or str(rows[0].get('shipmentNum')) != str(number):
+            raise EcontError('Липсва потвърждение за анулирането от Еконт.', uncertain=True)
+        if rows[0].get('error'):
+            raise EcontError('Еконт: ' + error_message(rows[0]['error']))
+
+    def request_courier(self, payload):
+        result = self.call('Shipments/ShipmentService.requestCourier', payload)
+        request_id = result.get('courierRequestID')
+        if not isinstance(request_id, (str, int)) or isinstance(request_id, bool) or not str(request_id).strip() or str(request_id) == '0':
+            raise EcontError('Липсва номер на заявката за куриер.', uncertain=True)
+        return str(request_id), ' '.join(str(result.get(key) or '') for key in ('warnings', 'delayedRequestWarning')).strip()[:1000]
+
+    def courier_request_status(self, request_id):
+        result = self.call('Shipments/ShipmentService.getRequestCourierStatus', {'requestCourierIds': [request_id]})
+        rows = result.get('requestCourierStatus')
+        if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict):
+            raise EcontError('Липсва статус на заявката за куриер.')
+        if rows[0].get('error'):
+            raise EcontError('Еконт: ' + error_message(rows[0]['error']))
+        status = rows[0].get('status')
+        if not isinstance(status, dict) or str(status.get('id')) != str(request_id):
+            raise EcontError('Номерът на заявката за куриер не съвпада.')
+        return status
+
+
 def safe_pdf_url(value, environment):
     """Only open Econt's own PDF host, in the shipment's original environment."""
     if not isinstance(value, str):

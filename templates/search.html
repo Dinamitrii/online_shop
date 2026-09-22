@@ -24,10 +24,13 @@
         <div class="product-info">
             <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
             <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
+            {% include '_availability_badge.html' %}
+            {% if p.stock > 0 %}
             <form action="{{ url_for('cart_add', product_id=p.id) }}" method="post">
                 <input type="hidden" name="qty" value="1">
-                <button type="submit" class="btn btn-small">Добави в количката</button>
+                <button type="submit" class="btn btn-small">{{ 'Заяви по поръчка' if p.availability == 'on_order' else 'Добави в количката' }}</button>
             </form>
+            {% endif %}
         </div>
     </div>
     {% endfor %}

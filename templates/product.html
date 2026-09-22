@@ -19,7 +19,14 @@
         <p class="product-description">{{ product.description }}</p>
 
         {% if product.stock > 0 %}
-            <p class="stock-ok">✔ В наличност ({{ product.stock }} бр.)</p>
+            <p class="{{ availability_badge_class[product.availability] }}">
+                {{ availability_icons[product.availability] }} {{ availability_labels[product.availability] }}
+                {% if product.availability == 'on_order' %}
+                    — възможни до {{ product.stock }} бр.
+                {% else %}
+                    ({{ product.stock }} бр.)
+                {% endif %}
+            </p>
         {% else %}
             <p class="stock-out">✘ Изчерпан</p>
         {% endif %}
@@ -30,6 +37,9 @@
             <input type="number" id="qty" name="qty" value="1" min="1" max="{{ product.stock }}">
             <button type="submit" class="btn">Добави в количката</button>
         </form>
+        {% if product.availability == 'on_order' %}
+        <p class="field-hint">Този продукт е по поръчка — срокът на доставка се уточнява допълнително.</p>
+        {% endif %}
         {% endif %}
     </div>
 </div>
