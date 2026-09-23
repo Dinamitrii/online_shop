@@ -14,15 +14,25 @@
         <p><strong>Телефон:</strong> {{ order.phone }}</p>
         {% if order.email %}<p><strong>Имейл:</strong> {{ order.email }}</p>{% endif %}
         <p><strong>Адрес:</strong> {{ order.address }}</p>
+        <p><strong>Куриер:</strong> {{ order.courier or 'Econt' }}</p>
         <p><strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
 
         <h2>Смяна на статус</h2>
         <form action="{{ url_for('admin_order_status', order_id=order.id) }}" method="post" class="status-change-form">
-            <select name="status">
+            <label for="status">Статус</label>
+            <select id="status" name="status">
                 {% for s in statuses %}
                 <option value="{{ s }}" {% if s == order.status %}selected{% endif %}>{{ s }}</option>
                 {% endfor %}
             </select>
+
+            <label for="courier">Куриер</label>
+            <select id="courier" name="courier">
+                {% for c in ['Econt', 'Speedy'] %}
+                <option value="{{ c }}" {% if c == (order.courier or 'Econt') %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+
             <button type="submit" class="btn btn-small">Обнови</button>
         </form>
     </div>

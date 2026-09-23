@@ -30,6 +30,7 @@
             <th>Клиент</th>
             <th>Телефон</th>
             <th>Дата</th>
+            <th>Куриер</th>
             <th>Сума</th>
             <th>Статус</th>
             <th></th>
@@ -42,6 +43,7 @@
             <td>{{ o.customer_name }}</td>
             <td>{{ o.phone }}</td>
             <td>{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ o.courier or 'Econt' }}</td>
             <td>{{ '%.2f'|format(o.total) }} €</td>
             <td>
                 <span class="status-badge status-{{ o.status | replace(' ', '-') }}">{{ o.status }}</span>

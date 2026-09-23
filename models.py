@@ -36,6 +36,7 @@ class Order(db.Model):
     __tablename__ = 'orders'
 
     STATUSES = ['нова', 'в обработка', 'изпратена', 'завършена', 'отказана']
+    COURIERS = ['Econt', 'Speedy']
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(150), nullable=False)
@@ -44,6 +45,7 @@ class Order(db.Model):
     email = db.Column(db.String(150), default='')
     total = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(30), default='нова', nullable=False)
+    courier = db.Column(db.String(50), default='Econt', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship('OrderItem', backref='order', lazy=True)

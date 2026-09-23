@@ -5,6 +5,7 @@
 <div class="confirmation-box">
     <h1>✔ Поръчката е приета!</h1>
     <p>Номер на поръчка: <strong>#{{ order.id }}</strong></p>
+    <p>Куриер: <strong>{{ order.courier or 'Econt' }}</strong></p>
     <p>Ще се свържем с Вас на телефон <strong>{{ order.phone }}</strong> за потвърждение.</p>
 
     <h2>Детайли</h2>

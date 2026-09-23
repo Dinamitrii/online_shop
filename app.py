@@ -335,6 +335,10 @@ def checkout():
         phone = request.form.get('phone', '').strip()
         address = request.form.get('address', '').strip()
         email = request.form.get('email', '').strip()
+        courier = request.form.get('courier', '').strip()
+
+        if courier not in Order.COURIERS:
+            courier = 'Econt'
 
         if not name or not phone or not address:
             flash('Моля, попълнете име, телефон и адрес.', 'error')
@@ -342,7 +346,7 @@ def checkout():
                                    categories=categories)
 
         order = Order(customer_name=name, phone=phone, address=address,
-                      email=email, total=total)
+                      email=email, total=total, courier=courier)
         db.session.add(order)
         db.session.flush()  # за да получим order.id
 
@@ -714,10 +718,10 @@ def admin_orders_export():
     orders, _, _ = selected_orders()
     return csv_download('orders.csv',
                         ['Номер', 'Дата (UTC)', 'Клиент', 'Телефон', 'Имейл',
-                         'Адрес', 'Сума (EUR)', 'Статус', 'Артикули'],
+                         'Адрес', 'Куриер', 'Сума (EUR)', 'Статус', 'Артикули'],
                         ([o.id, o.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                           o.customer_name, o.phone, o.email, o.address,
-                          f'{o.total:.2f}', o.status,
+                          o.courier, f'{o.total:.2f}', o.status,
                           '\n'.join(f'{i.product_name} × {i.qty} @ {i.price:.2f} EUR'
                                     for i in sorted(o.items, key=lambda item: item.id))]
                          for o in orders))
@@ -735,12 +739,24 @@ def admin_order_detail(order_id):
 def admin_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     new_status = request.form.get('status', '').strip()
+    new_courier = request.form.get('courier', '').strip()
+
     if new_status in Order.STATUSES:
         order.status = new_status
-        db.session.commit()
-        flash(f'Статусът на поръчка #{order.id} е обновен на "{new_status}".', 'success')
-    else:
+    elif new_status:
         flash('Невалиден статус.', 'error')
+
+    if new_courier in Order.COURIERS:
+        order.courier = new_courier
+        flash(f'Куриерът за поръчка #{order.id} е зададен на "{new_courier}".', 'success')
+    elif new_courier:
+        flash('Невалиден куриер.', 'error')
+
+    if new_status in Order.STATUSES or new_courier in Order.COURIERS:
+        db.session.commit()
+        if new_status in Order.STATUSES:
+            flash(f'Статусът на поръчка #{order.id} е обновен на "{new_status}".', 'success')
+
     return redirect(request.referrer or url_for('admin_orders'))
 
 
@@ -824,6 +840,9 @@ def migrate_db():
         order_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(orders)"))]
         if 'status' not in order_cols:
             conn.execute(text("ALTER TABLE orders ADD COLUMN status VARCHAR(30) DEFAULT 'нова'"))
+            conn.commit()
+        if 'courier' not in order_cols:
+            conn.execute(text("ALTER TABLE orders ADD COLUMN courier VARCHAR(50) DEFAULT 'Econt' NOT NULL"))
             conn.commit()
 
         category_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(categories)"))]
