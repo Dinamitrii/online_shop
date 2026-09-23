@@ -47,7 +47,7 @@ app.config['WHATSAPP_NUMBER'] = os.environ.get('WHATSAPP_NUMBER', '')
 
 # Версия на статичните файлове (CSS) — сменя се при всяка визуална промяна,
 # за да не показва браузърът стар кеширан style.css след ъпдейт.
-app.config['ASSET_VERSION'] = '10'
+app.config['ASSET_VERSION'] = '11'
 
 # Courier settings: disabled unless explicitly enabled in the local .env.
 app.config['COURIER_ENABLED'] = os.environ.get('COURIER_ENABLED', 'false').lower() == 'true'
