@@ -1,4 +1,3 @@
-# Sitemap XML imports v1
 from datetime import timezone
 from xml.etree.ElementTree import Element, SubElement, tostring
 import os
@@ -15,8 +14,6 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
 from security import safe_equal, safe_next_url
-from datetime import timezone
-from xml.etree.ElementTree import Element, SubElement, tostring
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))  # чете стойностите от .env файла (ако съществува)
