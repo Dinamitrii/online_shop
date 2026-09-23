@@ -24,10 +24,6 @@ MAX_IMAGE_SIZE_MB = 5
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# Responsive images v1
-from responsive_images import install as install_responsive_images, generate as generate_responsive_image
-install_responsive_images(app)
-
 # SECRET_KEY — ако липсва в .env, генерира се случаен (но тогава сесиите/количките
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
@@ -113,7 +109,6 @@ def save_uploaded_image(file_storage):
     safe_name = secure_filename(unique_name)
     filepath = os.path.join(UPLOAD_FOLDER, safe_name)
     file_storage.save(filepath)
-    generate_responsive_image(filepath)
     return url_for('static', filename=f'img/products/{safe_name}')
 
 
