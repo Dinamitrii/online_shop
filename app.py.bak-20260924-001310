@@ -717,37 +717,6 @@ def admin_categories_export():
                          for c in categories))
 
 
-@app.route('/admin/categories/<int:category_id>/edit', methods=['GET', 'POST'])
-@admin_required
-def admin_category_edit(category_id):
-    category = Category.query.get_or_404(category_id)
-    sort = selected_sort(CATEGORY_SORTS) if 'sort' in request.args else saved_category_sort()
-    session.setdefault('category_edit_csrf', secrets.token_urlsafe(32))
-    name = category.name
-    if request.method == 'POST':
-        if not safe_equal(session['category_edit_csrf'], request.form.get('csrf_token', '')):
-            abort(400)
-        name = request.form.get('name', '').strip()
-        if not name:
-            flash('Името на категорията е задължително.', 'error')
-        elif len(name) > 100:
-            flash('Името може да съдържа най-много 100 символа.', 'error')
-        elif Category.query.filter(Category.name == name, Category.id != category.id).first():
-            flash('Вече съществува категория с това име.', 'error')
-        else:
-            from sqlalchemy.exc import IntegrityError
-            category.name = name
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
-                flash('Вече съществува категория с това име.', 'error')
-            else:
-                flash('Категорията беше обновена.', 'success')
-                return redirect(url_for('admin_categories', sort=sort))
-    return render_template('admin/category_form.html', category=category, name=name, sort=sort)
-
-
 @app.route('/admin/categories/<int:category_id>/image', methods=['POST'])
 @admin_required
 def admin_category_image(category_id):

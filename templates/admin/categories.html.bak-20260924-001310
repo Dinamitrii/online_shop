@@ -49,8 +49,6 @@
             <td>{{ c.name }}</td>
             <td>{{ c.product_count }}</td>
             <td class="admin-actions">
-                <a href="{{ url_for('admin_category_edit', category_id=c.id, sort=sort) }}"
-                   class="btn btn-small">Редактирай</a>
                 <form action="{{ url_for('admin_category_image', category_id=c.id) }}" method="post"
                       enctype="multipart/form-data" class="category-image-form">
                     <input type="file" name="image_file" accept=".png,.jpg,.jpeg,.webp,.gif"
