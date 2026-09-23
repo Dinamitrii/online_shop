@@ -2,14 +2,12 @@
 import hashlib
 import json
 import logging
-import tempfile
-import os
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 from PIL import Image, ImageOps
 from markupsafe import Markup, escape
 
-SIZES = (80, 160, 320, 640, 1200)
+SIZES = (320, 640, 1200)
 
 def generate(path):
     path = Path(path)
@@ -30,18 +28,11 @@ def generate(path):
                 target = folder / name
                 if not target.exists():
                     copy.save(target, 'WEBP', quality=82, method=6)
-                rows.append({'size': size, 'width': copy.width, 'height': copy.height, 'name': name})
+                rows.append({'size': size, 'width': copy.width, 'name': name})
             manifest = folder / (path.name + '.json')
-            temp_path = None
-            try:
-                with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=folder,
-                                                 suffix='.tmp', delete=False) as temp:
-                    temp_path = temp.name
-                    json.dump(rows, temp)
-                os.replace(temp_path, manifest)
-            finally:
-                if temp_path and os.path.exists(temp_path):
-                    os.unlink(temp_path)
+            temp = manifest.with_suffix('.json.tmp')
+            temp.write_text(json.dumps(rows), encoding='utf-8')
+            temp.replace(manifest)
             return True
     except (OSError, ValueError, Image.DecompressionBombError):
         logging.getLogger(__name__).warning('Image variants unavailable for %s; keeping original', path.name)
@@ -51,27 +42,21 @@ def install(app):
     def responsive_image_attrs(url, size=640, sizes='(max-width: 600px) 100vw, 300px'):
         attrs = {'src': url or ''}
         parts = urlsplit(url or '')
-        if parts.path == '/static/img/brand/logo.png':
-            attrs.update(width=510, height=382)
-        prefix = ('/static/img/brand/' if parts.path == '/static/img/brand/logo.png'
-                  else '/static/img/products/')
+        prefix = '/static/img/products/'
         if not parts.scheme and not parts.netloc and parts.path.startswith(prefix):
             name = unquote(parts.path[len(prefix):])
             if name and '/' not in name and '\\' not in name and name not in ('.', '..'):
-                folder = Path(app.static_folder) / prefix.removeprefix('/static/') / '_responsive'
+                folder = Path(app.static_folder) / 'img/products/_responsive'
                 try:
                     rows = json.loads((folder / (name + '.json')).read_text())
-                    if rows and all((folder / row['name']).is_file() for row in rows):
-                        base = prefix + '_responsive/'
+                    if all((folder / row['name']).is_file() for row in rows):
+                        base = '/static/img/products/_responsive/'
                         from urllib.parse import quote
                         chosen = min(rows, key=lambda row: abs(row['size'] - size))
                         attrs['src'] = base + quote(chosen['name'])
                         unique = {row['width']: row for row in rows}
                         attrs['srcset'] = ', '.join(base + quote(row['name']) + f' {width}w' for width, row in sorted(unique.items()))
                         attrs['sizes'] = sizes
-                        if chosen.get('height'):
-                            attrs['width'] = chosen['width']
-                            attrs['height'] = chosen['height']
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
         return Markup(' ').join(Markup('{}="{}"').format(key, escape(value)) for key, value in attrs.items())

@@ -47,7 +47,7 @@
 <header class="topbar">
     <div class="topbar-inner">
         <a href="{{ url_for('index') }}" class="brand">
-            <img {{ responsive_image_attrs(url_for('static', filename='img/brand/logo.png'), 80, '(max-width: 600px) 51px, 70px') }} alt="Железария Дианабад" class="brand-logo">
+            <img src="{{ url_for('static', filename='img/brand/logo.png') }}" alt="Железария Дианабад" class="brand-logo" width="510" height="382">
             <span class="brand-text">Железария <span>Дианабад</span></span>
         </a>
 
