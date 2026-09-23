@@ -40,7 +40,7 @@
         <tr>
             <td>
                 {% if c.image_url %}
-                    <img {{ responsive_image_attrs(c.image_url, 320, '44px') }} alt="{{ c.name }}" class="admin-category-thumb">
+                    <img src="{{ c.image_url }}" alt="{{ c.name }}" class="admin-category-thumb">
                 {% else %}
                     <span class="admin-category-thumb-placeholder">{{ category_icons.get(c.name, '🧰') }}</span>
                 {% endif %}
