@@ -1,29 +1,38 @@
 import unittest
-from app import app, db
+from pathlib import Path
+from html.parser import HTMLParser
+from jinja2 import Environment, DictLoader
+
+
+class FrameParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.frames = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'iframe':
+            self.frames.append(dict(attrs))
 
 
 class ContactsMapTests(unittest.TestCase):
-    def setUp(self):
-        app.config.update(TESTING=True, SECRET_KEY='unit-test')
-        self.ctx = app.app_context(); self.ctx.push()
-        db.create_all()
-        self.c = app.test_client()
-
-    def tearDown(self):
-        db.session.remove(); db.drop_all(); self.ctx.pop()
-
-    def test_contacts_page_has_no_google_maps_iframe(self):
-        page = self.c.get('/contacts').text
-        self.assertNotIn('<iframe', page)
-        self.assertNotIn('google.com/maps?q=', page)
-        self.assertNotIn('google.com/maps/embed', page)
-
-    def test_contacts_page_links_to_google_maps_search(self):
-        page = self.c.get('/contacts').text
-        self.assertIn('https://www.google.com/maps/search/?api=1&query=', page)
-        self.assertIn('Отвори в Google Maps', page)
-        self.assertIn('target="_blank"', page)
-        self.assertIn('rel="noopener"', page)
+    def test_contacts_embeds_map_filling_container(self):
+        source = (Path(__file__).resolve().parents[1] / 'templates' / 'contacts.html').read_text()
+        env = Environment(loader=DictLoader({
+            'base.html': '{% block content %}{% endblock %}',
+            'contacts.html': source,
+        }), autoescape=True)
+        page = env.get_template('contacts.html').render(whatsapp_number='')
+        parser = FrameParser()
+        parser.feed(page)
+        self.assertEqual(len(parser.frames), 1)
+        frame = parser.frames[0]
+        self.assertTrue(frame['src'].startswith('https://www.google.com/maps?q='))
+        self.assertIn('&output=embed', frame['src'])
+        self.assertTrue(frame['title'])
+        self.assertIn('height:100%', frame['style'])
+        self.assertIn('width:100%', frame['style'])
+        self.assertIn('position:relative', page)
+        self.assertIn('min-height:360px', page)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@
 <div class="product-detail">
     <div class="product-detail-thumb">
         {% if product.image_url %}
-            <img src="{{ product.image_url }}" alt="{{ product.name }}" fetchpriority="high" loading="eager">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
         {% else %}
             <div class="placeholder-thumb placeholder-thumb-large">🔩</div>
         {% endif %}
