@@ -1039,10 +1039,7 @@ def sitemap_xml():
 
 @app.route("/favicon.ico")
 def favicon():
-    return (url_for('static', filename='img/favicon/favicon.ico'),
-            url_for('static', filename='img/favicon/favicon-16x16.png'),
-            url_for('static', filename='img/favicon/favicon-32x32.png'),
-            url_for('static', filename='img/favicon/favicon-96x96.png'),
+    return send_from_directory(os.path.join(app.static_folder, 'img', 'favicon'), 'favicon.ico')
 
             url_for('static', filename='img/favicon/android-icon-36x36.png'),
             url_for('static', filename='img/favicon/android-icon-48x48.png'),
