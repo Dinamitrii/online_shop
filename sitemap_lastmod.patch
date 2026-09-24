@@ -1,0 +1,43 @@
+diff --git a/app.py b/app.py
+index 70cff35..117f677 100644
+--- a/app.py
++++ b/app.py
+@@ -926,17 +926,34 @@ def sitemap_xml():
+                 .replace('+00:00', 'Z')
+             )
+ 
+-    add_url('index')
++    def latest(*dates):
++        """Най-новата от подадените дати (пропуска празните)."""
++        dates = [d for d in dates if d is not None]
++        return max(dates) if dates else None
++
++    categories = Category.query.order_by(Category.id).all()
++    products = Product.query.order_by(Product.id).all()
++
++    # Категорията е променена, когато е променена тя самата или някой от
++    # продуктите ѝ. Началната страница - при промяна на каквото и да е в каталога.
++    category_lastmod = {c.id: getattr(c, 'updated_at', None) for c in categories}
++    for product in products:
++        category_lastmod[product.category_id] = latest(
++            category_lastmod.get(product.category_id),
++            getattr(product, 'updated_at', None)
++        )
++
++    add_url('index', lastmod=latest(*category_lastmod.values()))
+     add_url('contacts')
+ 
+-    for category in Category.query.order_by(Category.id).all():
++    for category in categories:
+         add_url(
+             'category_view',
+             category_id=category.id,
+-            lastmod=getattr(category, 'updated_at', None)
++            lastmod=category_lastmod.get(category.id)
+         )
+ 
+-    for product in Product.query.order_by(Product.id).all():
++    for product in products:
+         add_url(
+             'product_view',
+             product_id=product.id,

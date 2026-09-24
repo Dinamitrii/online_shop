@@ -1,0 +1,21 @@
+diff --git a/static/robots.txt b/static/robots.txt
+index 86af638..550aa72 100644
+--- a/static/robots.txt
++++ b/static/robots.txt
+@@ -1,4 +1,16 @@
+ User-agent: *
+ Allow: /
+ 
++# Админ панел, количка, поръчки - не са за индексиране
++Disallow: /admin
++Disallow: /cart
++Disallow: /checkout
++Disallow: /order/
++
++# Вътрешно търсене и дублиращи варианти на категориите
++Disallow: /search
++Disallow: /*?q=
++Disallow: /*?sort=
++Disallow: /*&sort=
++
+ Sitemap: https://e-jelezaria.bg/sitemap.xml
