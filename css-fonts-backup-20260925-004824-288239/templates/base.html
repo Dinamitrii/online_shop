@@ -18,14 +18,15 @@
 
     <title>{% block title %}Железария Дианабад{% endblock %}</title>
 
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 
-    
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=PT+Sans:wght@400;700&display=swap"
+          rel="stylesheet" type="text/css">
 
 
-    {{ shop_performance_head() }}
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"/>
 
     <link rel="apple-touch-icon" sizes="180x180"
           href="{{ url_for('static', filename='img/favicon/apple-touch-icon.png') }}"/>

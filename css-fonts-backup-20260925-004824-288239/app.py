@@ -26,10 +26,6 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 # Responsive images v1
 from responsive_images import install as install_responsive_images, generate as generate_responsive_image
 install_responsive_images(app)
-# CSS and fonts performance
-from performance_assets import install as install_performance_assets
-install_performance_assets(app)
-
 
 # SECRET_KEY — ако липсва в .env, генерира се случаен (но тогава сесиите/количките
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
