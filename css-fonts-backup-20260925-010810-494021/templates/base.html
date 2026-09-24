@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-21ZN5P2JFS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-21ZN5P2JFS');
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if request.endpoint == 'index' %}
+    <meta name="description" content="Железария Дианабад — инструменти, крепежни елементи, бои и лакове, ВиК и електроматериали за дома и ремонта. Пазарувайте онлайн или на място в София.">
+    {% endif %}
+
+    <title>{% block title %}Железария Дианабад{% endblock %}</title>
+
+    
+
+    
+
+    
+
+
+    {{ shop_performance_head() }}
+
+    <link rel="apple-touch-icon" sizes="180x180"
+          href="{{ url_for('static', filename='img/favicon/apple-touch-icon.png') }}"/>
+    <link rel="icon" type="image/png" sizes="32x32"
+          href="{{ url_for('static', filename='img/favicon/favicon-32x32.png') }}"/>
+    <link rel="icon" type="image/png" sizes="16x16"
+          href=" {{ url_for('static', filename='img/favicon/favicon-16x16.png') }}"/>
+    <link rel="manifest" href="{{ url_for('static', filename='img/favicon/manifest.json') }}"/>
+    <link rel="mask-icon"
+          href="{{ url_for('static', filename='img/favicon/safari-pinned-tab.svg', color='#5bbad5') }}"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon/favicon.ico') }}"/>
+
+    <meta name="msapplication-TileColor" content="#00aba9"/>
+    <meta name="msapplication-config" content="static/img/favicon/browserconfig.xml"/>
+    <meta name="theme-color" content="#ffffff"/>
+
+
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <a href="{{ url_for('index') }}" class="brand">
+            <img alt="Железария Дианабад"
+                 class="brand-logo"
+                 height="52"
+                 sizes="69px"
+                 src="{{ url_for('static', filename='img/brand/logo-140.png') }}"
+                 srcset="{{ url_for('static', filename='img/brand/logo-70.webp') }} 70w,
+                {{ url_for('static', filename='img/brand/logo-140.webp') }} 140w,
+                {{ url_for('static', filename='img/brand/logo-210.webp') }} 210w"
+                 width="69">
+            <span class="brand-text">Железария <span>Дианабад</span></span>
+        </a>
+
+        <form class="search-form" action="{{ url_for('search') }}" method="get">
+            <label>
+                <input type="text" name="q" placeholder="Търсене на продукт..." value="{{ q if q else '' }}">
+            </label>
+            <button type="submit">Търси</button>
+        </form>
+
+        <a href="{{ url_for('cart_view') }}" class="cart-link">
+            🛒 Количка
+            {% set cart = session.get('cart', {}) %}
+            {% if cart %}
+                <span class="cart-badge">{{ cart.values() | sum }}</span>
+            {% endif %}
+        </a>
+
+        <a href="{{ url_for('contacts') }}" class="contacts-link">📍 Контакти</a>
+    </div>
+    <nav class="categories-nav">
+        {% for c in categories %}
+            <a href="{{ url_for('category_view', category_id=c.id) }}">{{ c.name }}</a>
+        {% endfor %}
+    </nav>
+</header>
+
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <p>© 2026 Железария Дианабад · Всичко за дома, градината и строежа.</p>
+    <p><a href="{{ url_for('contacts') }}">Контакти</a> · <a href="{{ url_for('admin_dashboard') }}">Админ панел</a></p>
+</footer>
+{% if whatsapp_number %}
+<a href="https://wa.me/{{ whatsapp_number }}?text=Здравейте%2C+имам+въпрос+относно+продукт+от+Железария+Дианабад"
+   class="whatsapp-float" target="_blank" rel="noopener" aria-label="Пишете ни в WhatsApp">
+    <svg viewBox="0 0 32 32" width="30" height="30" fill="#fff">
+        <path d="M16.004 3C9.377 3 4 8.373 4 15c0 2.34.68 4.523 1.86 6.36L4 29l7.83-1.815A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm0 21.818c-1.94 0-3.75-.55-5.29-1.5l-.38-.226-4.65 1.078 1.11-4.53-.246-.4A9.77 9.77 0 0 1 5.2 15c0-5.96 4.85-10.818 10.804-10.818 5.955 0 10.804 4.858 10.804 10.818 0 5.96-4.85 10.818-10.804 10.818zm5.93-8.09c-.324-.163-1.918-.946-2.215-1.054-.297-.108-.513-.163-.73.163-.216.326-.837 1.054-1.027 1.27-.19.217-.378.244-.702.082-.324-.163-1.368-.505-2.606-1.612-.963-.86-1.613-1.922-1.803-2.248-.19-.325-.02-.501.142-.663.146-.145.324-.38.486-.57.163-.19.216-.326.324-.543.108-.217.054-.407-.027-.57-.081-.163-.73-1.766-1-2.42-.263-.633-.53-.548-.73-.558l-.622-.011c-.216 0-.567.081-.864.407-.297.326-1.135 1.11-1.135 2.71 0 1.6 1.162 3.144 1.324 3.36.163.217 2.288 3.49 5.543 4.895.775.334 1.38.534 1.85.684.777.247 1.484.212 2.043.129.623-.093 1.918-.783 2.19-1.54.27-.756.27-1.404.19-1.54-.082-.135-.298-.217-.622-.38z"/>
+    </svg>
+</a>
+{% endif %}
+
+</body>
+</html>
