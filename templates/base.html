@@ -47,7 +47,12 @@
 <header class="topbar">
     <div class="topbar-inner">
         <a href="{{ url_for('index') }}" class="brand">
-            <img src="{{ url_for('static', filename='img/brand/logo.png') }}" alt="Железария Дианабад" class="brand-logo">
+               <img src="{{ url_for('static', filename='img/brand/logo-140.png') }}"
+        srcset="{{ url_for('static', filename='img/brand/logo-70.webp') }} 70w,
+                {{ url_for('static', filename='img/brand/logo-140.webp') }} 140w,
+                {{ url_for('static', filename='img/brand/logo-210.webp') }} 210w"
+        sizes="69px" width="69" height="52"
+        alt="Железария Дианабад" class="brand-logo">
             <span class="brand-text">Железария <span>Дианабад</span></span>
         </a>
 
