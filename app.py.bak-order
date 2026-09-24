@@ -426,9 +426,6 @@ def checkout():
         session['cart'] = {}
         session.modified = True
 
-        # Запомняме поръчката в сесията на клиента - само той може да види потвърждението ѝ.
-        my_order_ids = session.get('my_order_ids', [])
-        session['my_order_ids'] = (my_order_ids + [order.id])[-20:]
         return redirect(url_for('order_confirmation', order_id=order.id))
 
     return render_template('checkout.html', items=items, total=total, categories=categories)
@@ -436,10 +433,6 @@ def checkout():
 
 @app.route('/order/<int:order_id>/confirmation')
 def order_confirmation(order_id):
-    # Потвърждението съдържа лични данни: достъпно е само за клиента, направил
-    # поръчката (в неговата сесия), и за администратора. Другите виждат 404.
-    if not session.get('is_admin') and order_id not in session.get('my_order_ids', []):
-        abort(404)
     order = Order.query.get_or_404(order_id)
     categories = storefront_categories()
     return render_template('confirmation.html', order=order, categories=categories)
