@@ -1017,45 +1017,31 @@ def static_from_root():
     return send_from_directory(app.static_folder, 'robots.txt')
 
 
-# --- sitemap:begin ---
-# Дата за записи без реална дата на промяна (създадени преди да се появи
-# updated_at). Фиксирана е нарочно: "днешна дата" при всяка заявка би
-# подвеждала търсачките. Щом продуктът/категорията се редактира, се ползва
-# истинската дата.
-SITEMAP_FALLBACK_LASTMOD = (2026, 9, 23)
-
-
 @app.route('/sitemap.xml')
 def sitemap_xml():
-    from datetime import datetime
-    from xml.etree import ElementTree as _ET
-
     site_url = 'https://e-jelezaria.bg'
-    fallback = datetime(*SITEMAP_FALLBACK_LASTMOD)
 
     root = Element(
         'urlset',
         xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'
     )
 
-    def add_url(endpoint, lastmod=None, changefreq='weekly', priority='0.7', **values):
+    def add_url(endpoint, lastmod=None, **values):
         entry = SubElement(root, 'url')
 
         path = url_for(endpoint, _external=False, **values)
         SubElement(entry, 'loc').text = site_url + path
 
-        # Датите в базата се пазят в UTC.
-        lastmod = lastmod or fallback
-        if lastmod.tzinfo is None:
-            lastmod = lastmod.replace(tzinfo=timezone.utc)
+        if lastmod is not None:
+            # Датите в базата се пазят в UTC.
+            if lastmod.tzinfo is None:
+                lastmod = lastmod.replace(tzinfo=timezone.utc)
 
-        SubElement(entry, 'lastmod').text = (
-            lastmod.astimezone(timezone.utc)
-            .isoformat(timespec='seconds')
-            .replace('+00:00', 'Z')
-        )
-        SubElement(entry, 'changefreq').text = changefreq
-        SubElement(entry, 'priority').text = priority
+            SubElement(entry, 'lastmod').text = (
+                lastmod.astimezone(timezone.utc)
+                .isoformat(timespec='seconds')
+                .replace('+00:00', 'Z')
+            )
 
     def latest(*dates):
         """Най-новата от подадените дати (пропуска празните)."""
@@ -1074,7 +1060,7 @@ def sitemap_xml():
             getattr(product, 'updated_at', None)
         )
 
-    add_url('index', lastmod=latest(*category_lastmod.values()), priority='1.0')
+    add_url('index', lastmod=latest(*category_lastmod.values()))
     add_url('contacts')
 
     for category in categories:
@@ -1090,9 +1076,6 @@ def sitemap_xml():
             product_id=product.id,
             lastmod=getattr(product, 'updated_at', None)
         )
-
-    if hasattr(_ET, 'indent'):  # Python 3.9+; по-четим изход
-        _ET.indent(root, space='  ')
 
     return Response(
         tostring(root, encoding='utf-8', xml_declaration=True),
