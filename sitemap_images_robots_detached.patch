@@ -1,0 +1,184 @@
+diff --git a/app.py b/app.py
+index 2dfd0ca..69c6284 100644
+--- a/app.py
++++ b/app.py
+@@ -1,7 +1,9 @@
+ from datetime import timezone
+-from xml.etree.ElementTree import Element, SubElement, tostring
++from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+ import os
++import re
+ import json
++from urllib.parse import quote
+ import tempfile
+ import csv
+ import io
+@@ -25,6 +27,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
+ 
+ # Responsive images v1
+ from responsive_images import install as install_responsive_images, generate as generate_responsive_image
++from responsive_images import _source_for_url as _responsive_source_for_url
+ install_responsive_images(app)
+ # CSS and fonts performance
+ from performance_assets import install as install_performance_assets
+@@ -1035,6 +1038,85 @@ def static_from_root():
+ # истинската дата.
+ SITEMAP_FALLBACK_LASTMOD = (2026, 9, 23)
+ 
++IMAGE_NS = 'http://www.google.com/schemas/sitemap-image/1.1'
++
++
++def _sitemap_image_url(site_url, image_url):
++    """Абсолютен URL на изображението за sitemap-а. Ако за оригинала има
++    генерирани WebP варианти (responsive_images), връща най-големия WebP;
++    иначе - оригинала (напр. когато вариантите още не са генерирани)."""
++    try:
++        resolved = _responsive_source_for_url(app, image_url)
++        if resolved is not None:
++            source, prefix = resolved
++            folder = source.parent / '_responsive'
++            rows = json.loads((folder / (source.name + '.json')).read_text(encoding='utf-8'))
++            rows = [r for r in rows if isinstance(r, dict) and isinstance(r.get('name'), str)
++                    and r['name'] and '/' not in r['name'] and '\\' not in r['name']
++                    and isinstance(r.get('width'), int) and (folder / r['name']).is_file()]
++            if rows:
++                best = max(rows, key=lambda r: r['width'])
++                return site_url + prefix + '_responsive/' + quote(best['name'])
++    except (OSError, ValueError, KeyError, TypeError, AttributeError):
++        pass
++    return site_url + image_url
++
++
++def _robots_star_rules(robots_text):
++    """Извлича Allow/Disallow правилата от групата за '*' в robots.txt, по
++    реда на срещане (нужен е за _robots_path_allowed - печели правилото с
++    най-специфичния съвпадащ шаблон, а не първото по ред).
++    """
++    groups = []
++    current_agents, current_rules = set(), []
++
++    def flush():
++        if current_agents:
++            groups.append((current_agents, current_rules))
++
++    for raw_line in robots_text.splitlines():
++        line = raw_line.split('#', 1)[0].strip()
++        if ':' not in line:
++            continue
++        field, _, value = line.partition(':')
++        field, value = field.strip().lower(), value.strip()
++        if field == 'user-agent':
++            if current_rules:
++                flush()
++                current_agents, current_rules = set(), []
++            current_agents.add(value.lower())
++        elif field in ('allow', 'disallow') and current_agents:
++            current_rules.append((field, value))
++    flush()
++
++    for agents, rules in groups:
++        if '*' in agents:
++            return rules
++    return []  # няма група за '*' -> всичко е позволено по подразбиране
++
++
++def _robots_pattern_regex(pattern):
++    """Компилира шаблон на Allow/Disallow ред в regex - поддържа '*'
++    (произволна последователност) и завършващ '$' (котва в края), както
++    реално се интерпретира синтаксисът на robots.txt (напр. '/*?sort=')."""
++    anchored = pattern.endswith('$')
++    body = pattern[:-1] if anchored else pattern
++    regex = ''.join('.*' if ch == '*' else re.escape(ch) for ch in body)
++    return re.compile('^' + regex + ('$' if anchored else ''))
++
++
++def _robots_path_allowed(star_rules, path):
++    """Позволен ли е даден път - печели правилото с най-дългия (най-
++    специфичния) суров шаблон, а не първото по ред."""
++    best_len, allowed = -1, True
++    for kind, pattern in star_rules:
++        if not pattern:
++            continue
++        if _robots_pattern_regex(pattern).match(path) and len(pattern) > best_len:
++            best_len = len(pattern)
++            allowed = (kind == 'allow')
++    return allowed
++
+ 
+ @app.route('/sitemap.xml')
+ def sitemap_xml():
+@@ -1046,13 +1128,29 @@ def sitemap_xml():
+ 
+     root = Element(
+         'urlset',
+-        xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'
++        {
++            'xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
++            'xmlns:image': IMAGE_NS,
++        }
+     )
+ 
+-    def add_url(endpoint, lastmod=None, changefreq='weekly', priority='0.7', **values):
+-        entry = SubElement(root, 'url')
++    try:
++        with open(os.path.join(app.static_folder, 'robots.txt'), encoding='utf-8') as f:
++            star_rules = _robots_star_rules(f.read())
++    except OSError:
++        star_rules = []
+ 
++    def add_url(endpoint, lastmod=None, changefreq='weekly', priority='0.7', images=None, **values):
+         path = url_for(endpoint, _external=False, **values)
++
++        if star_rules and not _robots_path_allowed(star_rules, path):
++            root.append(Comment(
++                ' БЛОКИРАНО ОТ ROBOTS.TXT: Disallow правило не позволява '
++                'обхождане на тази страница '
++            ))
++
++        entry = SubElement(root, 'url')
++
+         SubElement(entry, 'loc').text = site_url + path
+ 
+         # Датите в базата се пазят в UTC.
+@@ -1068,6 +1166,10 @@ def sitemap_xml():
+         SubElement(entry, 'changefreq').text = changefreq
+         SubElement(entry, 'priority').text = priority
+ 
++        for image_url in (images or ()):
++            image_tag = SubElement(entry, 'image:image')
++            SubElement(image_tag, 'image:loc').text = image_url
++
+     def latest(*dates):
+         """Най-новата от подадените дати (пропуска празните)."""
+         dates = [d for d in dates if d is not None]
+@@ -1092,16 +1194,28 @@ def sitemap_xml():
+         add_url(
+             'category_view',
+             category_id=category.id,
+-            lastmod=category_lastmod.get(category.id)
++            lastmod=category_lastmod.get(category.id),
++            images=[_sitemap_image_url(site_url, category.image_url)] if category.image_url else None,
+         )
+ 
+     for product in products:
+         add_url(
+             'product_view',
+             product_id=product.id,
+-            lastmod=getattr(product, 'updated_at', None)
++            lastmod=getattr(product, 'updated_at', None),
++            images=[_sitemap_image_url(site_url, product.image_url)] if product.image_url else None,
+         )
+ 
++    # robots.txt - директивен файл, не съдържателна страница, но е валиден
++    # URL и се включва по подобие на останалите записи (без changefreq/priority).
++    if star_rules and not _robots_path_allowed(star_rules, '/robots.txt'):
++        root.append(Comment(
++            ' БЛОКИРАНО ОТ ROBOTS.TXT: Disallow правило не позволява '
++            'обхождане на тази страница '
++        ))
++    robots_entry = SubElement(root, 'url')
++    SubElement(robots_entry, 'loc').text = f'{site_url}/robots.txt'
++
+     if hasattr(_ET, 'indent'):  # Python 3.9+; по-четим изход
+         _ET.indent(root, space='  ')
+ 
