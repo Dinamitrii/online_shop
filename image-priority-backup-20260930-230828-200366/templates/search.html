@@ -1,20 +1,13 @@
 {% extends 'base.html' %}
-{% block title %}{{ category.name }} · Железария Дианабад{% endblock %}
+{% block title %}Резултати за "{{ q }}" · Железария Дианабад{% endblock %}
 
 {% block content %}
-<h1 class="page-title category-page-title">
-    {% if category.image_url %}
-        <img {{ responsive_image_attrs(category.image_url, 320, '44px') }} alt="" class="category-title-photo" fetchpriority="auto" loading="eager" decoding="async">
-    {% else %}
-        <span>{{ category_icons.get(category.name, '🧰') }}</span>
-    {% endif %}
-    {{ category.name }}
-</h1>
+<h1 class="page-title">Резултати за "{{ q }}"</h1>
 
-<form class="inline-search list-toolbar" method="get">
-    <input type="text" name="q" placeholder="Търсене в {{ category.name }}..." value="{{ q }}">
+<form class="list-toolbar" method="get">
+    <input type="hidden" name="q" value="{{ q }}">
     {% include 'sort_select.html' %}
-    <button type="submit" class="btn btn-small">Филтрирай</button>
+    <button type="submit" class="btn btn-small">Подреди</button>
 </form>
 
 {% if products %}
@@ -23,7 +16,7 @@
     <div class="product-card">
         <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
             {% if p.image_url %}
-                <img {{ responsive_image_attrs(p.image_url, 640, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}" fetchpriority="{{ 'high' if loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async">
+                <img {{ responsive_image_attrs(p.image_url, 640, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}">
             {% else %}
                 <div class="placeholder-thumb">🔩</div>
             {% endif %}
@@ -43,6 +36,6 @@
     {% endfor %}
 </div>
 {% else %}
-<p class="empty-msg">Няма намерени продукти в тази категория.</p>
+<p class="empty-msg">Няма намерени продукти по зададената дума.</p>
 {% endif %}
 {% endblock %}
