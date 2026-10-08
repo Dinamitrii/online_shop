@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-    <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-53479XW9');</script>
-<!-- End Google Tag Manager -->
-
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-21ZN5P2JFS"></script>
 <script>
@@ -20,22 +12,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if request.endpoint == 'index' %}
+    <meta name="description" content="Железария Дианабад — инструменти, крепежни елементи, бои и лакове, ВиК и електроматериали за дома и ремонта. Пазарувайте онлайн или на място в София.">
+    {% endif %}
 
     <title>{% block title %}Железария Дианабад{% endblock %}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
 
-    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&amp;family=PT+Sans:wght@400;700&amp;display=swap"
-          rel="stylesheet" media="print" onload="this.onload=null;this.media='all'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&amp;family=PT+Sans:wght@400;700&amp;display=swap"
-              rel="stylesheet">
-    </noscript>
+    
 
 
-    <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"/>
+    {{ shop_performance_head() }}
 
     <link rel="apple-touch-icon" sizes="180x180"
           href="{{ url_for('static', filename='img/favicon/apple-touch-icon.png') }}"/>
@@ -55,15 +45,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-53479XW9"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 
 <header class="topbar">
     <div class="topbar-inner">
         <a href="{{ url_for('index') }}" class="brand">
-            <img {{ responsive_image_attrs(url_for('static', filename='img/brand/logo.png'), 80, '(max-width: 600px) 51px, 70px') }} alt="Железария Дианабад" class="brand-logo">
+            <img alt="Железария Дианабад"
+                 class="brand-logo"
+                 height="52"
+                 sizes="69px"
+                 src="{{ url_for('static', filename='img/brand/logo-140.png') }}"
+                 srcset="{{ url_for('static', filename='img/brand/logo-70.webp') }} 70w,
+                {{ url_for('static', filename='img/brand/logo-140.webp') }} 140w,
+                {{ url_for('static', filename='img/brand/logo-210.webp') }} 210w"
+                 width="69">
             <span class="brand-text">Железария <span>Дианабад</span></span>
         </a>
 

@@ -127,6 +127,10 @@ deployment:
         --exclude='/img/categories/' \
         static/ "$APP_ROOT/static/"
 
+      # Self-hosted fonts are required when performance_assets imports.
+      echo "==> Syncing local fonts"
+      rsync -a performance-fonts/ "$APP_ROOT/performance-fonts/"
+
       # ------------------------------------------------------------
       # Verify the deployed application BEFORE restarting Passenger
       # ------------------------------------------------------------

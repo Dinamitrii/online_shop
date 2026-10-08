@@ -1,15 +1,16 @@
 from datetime import timezone
-from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 import os
+import re
 import json
+from urllib.parse import quote
 import tempfile
 import csv
 import io
 import uuid
 import secrets
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, \
-    abort
+from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from models import db, Category, Product, Order, OrderItem, CourierShipment, CourierAction
@@ -26,7 +27,12 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # Responsive images v1
 from responsive_images import install as install_responsive_images, generate as generate_responsive_image
+from responsive_images import _source_for_url as _responsive_source_for_url
 install_responsive_images(app)
+# CSS and fonts performance
+from performance_assets import install as install_performance_assets
+install_performance_assets(app)
+
 
 # SECRET_KEY — ако липсва в .env, генерира се случаен (но тогава сесиите/количките
 # се нулират при всеки рестарт на сървъра, затова е препоръчително да се зададе фиксиран в .env).
@@ -460,6 +466,9 @@ def checkout():
         session['cart'] = {}
         session.modified = True
 
+        # Запомняме поръчката в сесията на клиента - само той може да види потвърждението ѝ.
+        my_order_ids = session.get('my_order_ids', [])
+        session['my_order_ids'] = (my_order_ids + [order.id])[-20:]
         return redirect(url_for('order_confirmation', order_id=order.id))
 
     return render_template('checkout.html', items=items, total=total, categories=categories)
@@ -467,6 +476,10 @@ def checkout():
 
 @app.route('/order/<int:order_id>/confirmation')
 def order_confirmation(order_id):
+    # Потвърждението съдържа лични данни: достъпно е само за клиента, направил
+    # поръчката (в неговата сесия), и за администратора. Другите виждат 404.
+    if not session.get('is_admin') and order_id not in session.get('my_order_ids', []):
+        abort(404)
     order = Order.query.get_or_404(order_id)
     categories = storefront_categories()
     return render_template('confirmation.html', order=order, categories=categories)
@@ -751,6 +764,37 @@ def admin_categories_export():
                          for c in categories))
 
 
+@app.route('/admin/categories/<int:category_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_category_edit(category_id):
+    category = Category.query.get_or_404(category_id)
+    sort = selected_sort(CATEGORY_SORTS) if 'sort' in request.args else saved_category_sort()
+    session.setdefault('category_edit_csrf', secrets.token_urlsafe(32))
+    name = category.name
+    if request.method == 'POST':
+        if not safe_equal(session['category_edit_csrf'], request.form.get('csrf_token', '')):
+            abort(400)
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Името на категорията е задължително.', 'error')
+        elif len(name) > 100:
+            flash('Името може да съдържа най-много 100 символа.', 'error')
+        elif Category.query.filter(Category.name == name, Category.id != category.id).first():
+            flash('Вече съществува категория с това име.', 'error')
+        else:
+            from sqlalchemy.exc import IntegrityError
+            category.name = name
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                flash('Вече съществува категория с това име.', 'error')
+            else:
+                flash('Категорията беше обновена.', 'success')
+                return redirect(url_for('admin_categories', sort=sort))
+    return render_template('admin/category_form.html', category=category, name=name, sort=sort)
+
+
 @app.route('/admin/categories/<int:category_id>/image', methods=['POST'])
 @admin_required
 def admin_category_image(category_id):
@@ -1020,31 +1064,144 @@ def static_from_root():
     return send_from_directory(app.static_folder, 'robots.txt')
 
 
+# --- sitemap:begin ---
+# Дата за записи без реална дата на промяна (създадени преди да се появи
+# updated_at). Фиксирана е нарочно: "днешна дата" при всяка заявка би
+# подвеждала търсачките. Щом продуктът/категорията се редактира, се ползва
+# истинската дата.
+SITEMAP_FALLBACK_LASTMOD = (2026, 9, 23)
+
+IMAGE_NS = 'http://www.google.com/schemas/sitemap-image/1.1'
+
+
+def _sitemap_image_url(site_url, image_url):
+    """Абсолютен URL на изображението за sitemap-а. Ако за оригинала има
+    генерирани WebP варианти (responsive_images), връща най-големия WebP;
+    иначе - оригинала (напр. когато вариантите още не са генерирани)."""
+    try:
+        resolved = _responsive_source_for_url(app, image_url)
+        if resolved is not None:
+            source, prefix = resolved
+            folder = source.parent / '_responsive'
+            rows = json.loads((folder / (source.name + '.json')).read_text(encoding='utf-8'))
+            rows = [r for r in rows if isinstance(r, dict) and isinstance(r.get('name'), str)
+                    and r['name'] and '/' not in r['name'] and '\\' not in r['name']
+                    and isinstance(r.get('width'), int) and (folder / r['name']).is_file()]
+            if rows:
+                best = max(rows, key=lambda r: r['width'])
+                return site_url + prefix + '_responsive/' + quote(best['name'])
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        pass
+    return site_url + image_url
+
+
+def _robots_star_rules(robots_text):
+    """Извлича Allow/Disallow правилата от групата за '*' в robots.txt, по
+    реда на срещане (нужен е за _robots_path_allowed - печели правилото с
+    най-специфичния съвпадащ шаблон, а не първото по ред).
+    """
+    groups = []
+    current_agents, current_rules = set(), []
+
+    def flush():
+        if current_agents:
+            groups.append((current_agents, current_rules))
+
+    for raw_line in robots_text.splitlines():
+        line = raw_line.split('#', 1)[0].strip()
+        if ':' not in line:
+            continue
+        field, _, value = line.partition(':')
+        field, value = field.strip().lower(), value.strip()
+        if field == 'user-agent':
+            if current_rules:
+                flush()
+                current_agents, current_rules = set(), []
+            current_agents.add(value.lower())
+        elif field in ('allow', 'disallow') and current_agents:
+            current_rules.append((field, value))
+    flush()
+
+    for agents, rules in groups:
+        if '*' in agents:
+            return rules
+    return []  # няма група за '*' -> всичко е позволено по подразбиране
+
+
+def _robots_pattern_regex(pattern):
+    """Компилира шаблон на Allow/Disallow ред в regex - поддържа '*'
+    (произволна последователност) и завършващ '$' (котва в края), както
+    реално се интерпретира синтаксисът на robots.txt (напр. '/*?sort=')."""
+    anchored = pattern.endswith('$')
+    body = pattern[:-1] if anchored else pattern
+    regex = ''.join('.*' if ch == '*' else re.escape(ch) for ch in body)
+    return re.compile('^' + regex + ('$' if anchored else ''))
+
+
+def _robots_path_allowed(star_rules, path):
+    """Позволен ли е даден път - печели правилото с най-дългия (най-
+    специфичния) суров шаблон, а не първото по ред."""
+    best_len, allowed = -1, True
+    for kind, pattern in star_rules:
+        if not pattern:
+            continue
+        if _robots_pattern_regex(pattern).match(path) and len(pattern) > best_len:
+            best_len = len(pattern)
+            allowed = (kind == 'allow')
+    return allowed
+
+
 @app.route('/sitemap.xml')
 def sitemap_xml():
+    from datetime import datetime
+    from xml.etree import ElementTree as _ET
+
     site_url = 'https://e-jelezaria.bg'
+    fallback = datetime(*SITEMAP_FALLBACK_LASTMOD)
 
     root = Element(
         'urlset',
-        xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'
+        {
+            'xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9',
+            'xmlns:image': IMAGE_NS,
+        }
     )
 
-    def add_url(endpoint, lastmod=None, **values):
+    try:
+        with open(os.path.join(app.static_folder, 'robots.txt'), encoding='utf-8') as f:
+            star_rules = _robots_star_rules(f.read())
+    except OSError:
+        star_rules = []
+
+    def add_url(endpoint, lastmod=None, changefreq='weekly', priority='0.7', images=None, **values):
+        path = url_for(endpoint, _external=False, **values)
+
+        if star_rules and not _robots_path_allowed(star_rules, path):
+            root.append(Comment(
+                ' БЛОКИРАНО ОТ ROBOTS.TXT: Disallow правило не позволява '
+                'обхождане на тази страница '
+            ))
+
         entry = SubElement(root, 'url')
 
-        path = url_for(endpoint, _external=False, **values)
         SubElement(entry, 'loc').text = site_url + path
 
-        if lastmod is not None:
-            # Датите в базата се пазят в UTC.
-            if lastmod.tzinfo is None:
-                lastmod = lastmod.replace(tzinfo=timezone.utc)
+        # Датите в базата се пазят в UTC.
+        lastmod = lastmod or fallback
+        if lastmod.tzinfo is None:
+            lastmod = lastmod.replace(tzinfo=timezone.utc)
 
-            SubElement(entry, 'lastmod').text = (
-                lastmod.astimezone(timezone.utc)
-                .isoformat(timespec='seconds')
-                .replace('+00:00', 'Z')
-            )
+        SubElement(entry, 'lastmod').text = (
+            lastmod.astimezone(timezone.utc)
+            .isoformat(timespec='seconds')
+            .replace('+00:00', 'Z')
+        )
+        SubElement(entry, 'changefreq').text = changefreq
+        SubElement(entry, 'priority').text = priority
+
+        for image_url in (images or ()):
+            image_tag = SubElement(entry, 'image:image')
+            SubElement(image_tag, 'image:loc').text = image_url
 
     def latest(*dates):
         """Най-новата от подадените дати (пропуска празните)."""
@@ -1063,7 +1220,7 @@ def sitemap_xml():
             getattr(product, 'updated_at', None)
         )
 
-    add_url('index', lastmod=latest(*category_lastmod.values()))
+    add_url('index', lastmod=latest(*category_lastmod.values()), priority='1.0')
     add_url('contacts')
     add_url('returns_policy')
 
@@ -1071,15 +1228,30 @@ def sitemap_xml():
         add_url(
             'category_view',
             category_id=category.id,
-            lastmod=category_lastmod.get(category.id)
+            lastmod=category_lastmod.get(category.id),
+            images=[_sitemap_image_url(site_url, category.image_url)] if category.image_url else None,
         )
 
     for product in products:
         add_url(
             'product_view',
             product_id=product.id,
-            lastmod=getattr(product, 'updated_at', None)
+            lastmod=getattr(product, 'updated_at', None),
+            images=[_sitemap_image_url(site_url, product.image_url)] if product.image_url else None,
         )
+
+    # robots.txt - директивен файл, не съдържателна страница, но е валиден
+    # URL и се включва по подобие на останалите записи (без changefreq/priority).
+    if star_rules and not _robots_path_allowed(star_rules, '/robots.txt'):
+        root.append(Comment(
+            ' БЛОКИРАНО ОТ ROBOTS.TXT: Disallow правило не позволява '
+            'обхождане на тази страница '
+        ))
+    robots_entry = SubElement(root, 'url')
+    SubElement(robots_entry, 'loc').text = f'{site_url}/robots.txt'
+
+    if hasattr(_ET, 'indent'):  # Python 3.9+; по-четим изход
+        _ET.indent(root, space='  ')
 
     return Response(
         tostring(root, encoding='utf-8', xml_declaration=True),
@@ -1090,11 +1262,10 @@ def sitemap_xml():
 
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory(
-        os.path.join(app.static_folder, 'img', 'favicon'),
-        'favicon.ico',
-        mimetype='image/vnd.microsoft.icon'
-    )
+    return send_from_directory(os.path.join(app.static_folder, 'img', 'favicon'), 'favicon.ico')
+
+
+
 
 from courier import register_courier
 

@@ -1,0 +1,15 @@
+{% extends 'admin/base.html' %}
+{% block title %}Редакция на категория{% endblock %}
+{% block content %}
+<h1 class="page-title">Редакция: {{ category.name }}</h1>
+<form method="post" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ session['category_edit_csrf'] }}">
+    <label for="name">Име на категорията</label>
+    <input type="text" id="name" name="name" value="{{ name }}" required maxlength="100">
+    <small class="field-hint">Промяната се показва и в магазина. Продуктите остават в тази категория.</small>
+    <div class="admin-form-actions">
+        <button type="submit" class="btn">Запази</button>
+        <a href="{{ url_for('admin_categories', sort=sort) }}" class="btn btn-secondary">Отказ</a>
+    </div>
+</form>
+{% endblock %}
