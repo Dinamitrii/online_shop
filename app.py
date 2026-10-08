@@ -1275,8 +1275,31 @@ def sitemap_xml():
     if hasattr(_ET, 'indent'):  # Python 3.9+; по-четим изход
         _ET.indent(root, space='  ')
 
+    sitemap_data = tostring(root, encoding='utf-8', xml_declaration=True)
+
+    # Запазва същия XML в static; атомарната подмяна предотвратява
+    # четенето на частично записан файл при едновременни заявки.
+    sitemap_temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode='wb', dir=app.static_folder, prefix='.sitemap-', delete=False
+        ) as sitemap_file:
+            sitemap_temp_path = sitemap_file.name
+            sitemap_file.write(sitemap_data)
+        os.chmod(sitemap_temp_path, 0o644)
+        os.replace(sitemap_temp_path, os.path.join(app.static_folder, 'sitemap.xml'))
+        sitemap_temp_path = None
+    except OSError:
+        app.logger.exception('Неуспешно записване на static/sitemap.xml')
+    finally:
+        if sitemap_temp_path is not None:
+            try:
+                os.unlink(sitemap_temp_path)
+            except OSError:
+                app.logger.exception('Неуспешно изтриване на временния sitemap файл')
+
     return Response(
-        tostring(root, encoding='utf-8', xml_declaration=True),
+        sitemap_data,
         content_type='application/xml; charset=utf-8',
         headers={'Cache-Control': 'no-store'}
     )
