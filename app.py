@@ -40,6 +40,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.environ.get('SHOP_DATABASE_PATH',
                                                                       os.path.join(BASE_DIR, 'store.db'))
+app.config['CANONICAL_SITE_URL'] = 'https://e-jelezaria.bg'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = MAX_IMAGE_SIZE_MB * 1024 * 1024
 
@@ -76,6 +77,27 @@ db.init_app(app)
 @app.context_processor
 def inject_whatsapp_number():
     return {'whatsapp_number': app.config['WHATSAPP_NUMBER'], 'asset_version': app.config['ASSET_VERSION']}
+
+
+@app.context_processor
+def inject_canonical_url():
+    # Use route values, never the incoming Host or tracking/sorting parameters.
+    public_pages = {'index', 'category_view', 'product_view', 'contacts', 'returns_policy'}
+    canonical_url = None
+    if request.endpoint in public_pages and request.method in ('GET', 'HEAD'):
+        canonical_url = app.config['CANONICAL_SITE_URL'] + url_for(
+            request.endpoint, _external=False, **(request.view_args or {})
+        )
+    return {'canonical_url': canonical_url}
+
+
+@app.before_request
+def redirect_www_domain():
+    # Local development and other hosts remain accessible. GET/HEAD redirects
+    # preserve query parameters and do not replay checkout or admin POSTs.
+    if request.method in ('GET', 'HEAD') and request.host.partition(':')[0].lower() == 'www.e-jelezaria.bg':
+        path = request.full_path.rstrip('?') if not request.query_string else request.full_path
+        return redirect(app.config['CANONICAL_SITE_URL'] + path, code=301)
 
 
 # Emoji fallback за категории без качена снимка (виж admin/categories.html за upload)
@@ -1129,7 +1151,7 @@ def sitemap_xml():
     from datetime import datetime
     from xml.etree import ElementTree as _ET
 
-    site_url = 'https://e-jelezaria.bg'
+    site_url = app.config['CANONICAL_SITE_URL']
     fallback = datetime(*SITEMAP_FALLBACK_LASTMOD)
 
     root = Element(
