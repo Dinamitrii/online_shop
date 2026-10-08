@@ -300,6 +300,12 @@ def search():
                            sort=sort, sort_options=PRODUCT_SORTS)
 
 
+@app.route('/returns')
+def returns_policy():
+    categories = storefront_categories()
+    return render_template('returns.html', categories=categories)
+
+
 @app.route('/contacts')
 def contacts():
     categories = storefront_categories()
@@ -1059,6 +1065,7 @@ def sitemap_xml():
 
     add_url('index', lastmod=latest(*category_lastmod.values()))
     add_url('contacts')
+    add_url('returns_policy')
 
     for category in categories:
         add_url(
