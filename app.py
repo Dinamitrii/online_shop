@@ -407,22 +407,49 @@ def checkout():
             return render_template('checkout.html', items=items, total=total,
                                    categories=categories)
 
-        order = Order(customer_name=name, phone=phone, address=address,
-                      email=email, total=total)
-        db.session.add(order)
-        db.session.flush()  # за да получим order.id
+        # Reserve stock with a conditional database update so competing checkouts
+        # cannot both purchase the same remaining units. Commit with the order.
+        try:
+            if len(items) != len(get_cart()):
+                db.session.rollback()
+                flash('Продукт от количката вече не е достъпен. Проверете количката.', 'error')
+                return redirect(url_for('cart_view'))
 
-        for item in items:
-            order_item = OrderItem(
-                order_id=order.id,
-                product_id=item['product'].id,
-                product_name=item['product'].name,
-                price=item['product'].price,
-                qty=item['qty']
-            )
-            db.session.add(order_item)
+            for item in sorted(items, key=lambda item: item['product'].id):
+                product = item['product']
+                qty = item['qty']
+                if not isinstance(qty, int) or qty <= 0:
+                    db.session.rollback()
+                    flash('Невалидно количество. Проверете количката.', 'error')
+                    return redirect(url_for('cart_view'))
+                reserved = Product.query.filter(
+                    Product.id == product.id, Product.stock >= qty
+                ).update({Product.stock: Product.stock - qty}, synchronize_session=False)
+                if reserved != 1:
+                    product_name = product.name
+                    db.session.rollback()
+                    flash(f'Недостатъчна наличност за "{product_name}". Проверете количката.', 'error')
+                    return redirect(url_for('cart_view'))
 
-        db.session.commit()
+            order = Order(customer_name=name, phone=phone, address=address,
+                          email=email, total=total)
+            db.session.add(order)
+            db.session.flush()  # за да получим order.id
+
+            for item in items:
+                order_item = OrderItem(
+                    order_id=order.id,
+                    product_id=item['product'].id,
+                    product_name=item['product'].name,
+                    price=item['product'].price,
+                    qty=item['qty']
+                )
+                db.session.add(order_item)
+
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
         session['cart'] = {}
         session.modified = True
