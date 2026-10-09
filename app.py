@@ -1174,6 +1174,7 @@ def _robots_path_allowed(star_rules, path):
 
 
 @app.route('/sitemap.xml')
+@app.route('/static/sitemap.xml')
 def sitemap_xml():
     from datetime import datetime
     from xml.etree import ElementTree as _ET
