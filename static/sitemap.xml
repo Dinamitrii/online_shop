@@ -1,385 +1,408 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/css" href="https://www.xml-sitemaps.com/css/sitemap.css"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-
-  <url>
-       <loc>https://e-jelezaria.bg/</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>1.0000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/cart</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/contacts</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/1</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/15</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/7</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/2</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/10</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/6</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/4</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/17</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/19</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/12</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/18</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/13</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/16</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/category/14</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/79</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/78</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/77</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/76</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/75</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/74</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/73</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/72</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.8000</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/71</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/70</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/5</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/4</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/3</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/2</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/1</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/54</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
-  </url>
-  <url>
-       <loc>https://e-jelezaria.bg/product/52</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+<?xml version='1.0' encoding='utf-8'?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://e-jelezaria.bg/</loc>
+    <lastmod>2026-09-23T21:28:30Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/contacts</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/returns</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/1</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/d3746ca07edc45e29417bd532c1f1d7c.png</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/2</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/9167d758df954781ae7548e822dbf503.jpeg</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/4</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/3454b0e9729a41dc87f73ae79a43235d.png</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/6</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/18d0a3ca6ae0423693880ce0d267f849.png</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/7</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/d9a9b49e2667473a8f7e50e6d9eb8afa.png</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/10</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/43e398161896466c8e71d5b2e9dc47af.png</image:loc>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://e-jelezaria.bg/category/12</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/e03b6d67d062483f85cbe9e66cebe3ac.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/51</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/13</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/d434167cac7d444cb977a5e4dd766ce4.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/42</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/14</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/50f0fd1b71f34154b4eefeca3d043515.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/41</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/15</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/08860e180e934d5894d538abb93a7e11.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/9</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/16</loc>
+    <lastmod>2026-09-23T21:28:30Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/7fc02bf870694ab19668902dd81bc284.jpeg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/8</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/17</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/9f889f24bfb044399b0206b70e0103b8.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/7</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/18</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/86b47a3bebd847a7a298ac2f799e5f70.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/6</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/category/19</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/b0d3c2dde1e64496a471fac029b8ffdd.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/63</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/1</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/62</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/2</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/61</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/3</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/60</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/4</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/59</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/5</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/58</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/6</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/57</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/7</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/56</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/8</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/23</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/9</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/22</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/14</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/21</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/15</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/69</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/16</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/68</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/17</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/67</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/21</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/66</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/22</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/65</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/23</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/64</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/35</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/006461ea278c4b6cba635d47da63987a.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/17</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/36</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/309b195fca564ab1913e6d4b1af76209.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/16</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/37</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/024f77d8aa6b4535b0873f2784254a3c.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/15</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/41</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/dedac381b4f54076ab62e3ca881a8449.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/14</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/42</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/14bfd742d3254c509685473a804cd66f.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/48</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/43</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/b74ef2e548eb451db1df75b19c50e7e9.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/46</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/44</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/034915138a154fb987148b5b25bd6629.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/45</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/45</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/297ec2910675477ea4db313e7d72e877.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/36</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/46</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/869a22d38ebf43e383ac35720207536a.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/35</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/47</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/93f6cc4983274983a89c87541d6137fc.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/53</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/48</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/c326e70dd3144e5dadd7b46621a5e1cd.png</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/43</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/49</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/f597dd22c3f448ecbd93f101f715ef27.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/37</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/50</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/da09ba6a37514d15a038818b8614292b.jpeg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/55</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/51</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/e64660edbf214de5a99288724a4723a8.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/50</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/52</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/6009732e51b34bfc9823ebf620130d58.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/49</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/53</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/3104b132cdfb4ba8bc687eeae2afb076.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/47</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/54</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/30a73e1fc3dd4e84978d122fe3d4038a.jpg</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/product/44</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/product/55</loc>
+    <lastmod>2026-09-23T00:00:00Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://e-jelezaria.bg/static/img/products/b0ee7721f7714e67966ef819f1e14e01.webp</image:loc>
+    </image:image>
   </url>
   <url>
-       <loc>https://e-jelezaria.bg/admin/login?next=/admin</loc>
-       <lastmod>2026-09-22T20:57:00+00:00</lastmod>
-       <priority>0.6400</priority>
+    <loc>https://e-jelezaria.bg/robots.txt</loc>
   </url>
 </urlset>
