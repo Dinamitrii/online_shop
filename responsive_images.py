@@ -226,4 +226,15 @@ def install(app):
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             pass
         return Markup(' ').join(Markup('{}="{}"').format(key, escape(value)) for key, value in attrs.items())
+    def responsive_image_preload(url, size=640, sizes='(max-width: 600px) 100vw, 300px'):
+        # Keep the preload candidate selection in sync with the rendered img srcset.
+        attrs = dict(re.findall(r'([a-z]+)="([^"]*)"', str(responsive_image_attrs(url, size, sizes))))
+        if not attrs.get('src'):
+            return Markup('')
+        srcset = Markup(' imagesrcset="{}"').format(escape(attrs['srcset'])) if attrs.get('srcset') else Markup('')
+        image_sizes = Markup(' imagesizes="{}"').format(escape(attrs['sizes'])) if attrs.get('sizes') else Markup('')
+        return Markup('<link rel="preload" as="image" href="{}"{}{} fetchpriority="high">').format(
+            escape(attrs['src']), srcset, image_sizes)
+
     app.jinja_env.globals['responsive_image_attrs'] = responsive_image_attrs
+    app.jinja_env.globals['responsive_image_preload'] = responsive_image_preload

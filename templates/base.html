@@ -20,6 +20,11 @@
 
 
     {{ shop_performance_head() }}
+    {% if request.endpoint == 'index' %}
+        {% for c in categories if c.name|lower == 'градина' and c.image_url %}
+            {{ responsive_image_preload(c.image_url, 320, '150px') }}
+        {% endfor %}
+    {% endif %}
 
     <link rel="apple-touch-icon" sizes="180x180"
           href="{{ url_for('static', filename='img/favicon/apple-touch-icon.png') }}"/>
