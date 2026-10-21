@@ -1,15 +1,15 @@
 :root {
     --steel: #0623e8;
     --steel-dark: #031696;
-    --accent: #f66444;
-    --accent-dark: #bf4e35;
+    --accent: #b83b20;
+    --accent-dark: #a9361c;
     --highlight: #d9a441;
     --bg: #ede7dc;
     --card-bg: #ffffff;
     --border: #ddd4c3;
     --text: #2a2622;
-    --text-light: #766f62;
-    --success: #4b7a51;
+    --text-light: #625a4e;
+    --success: #3f6b45;
     --danger: #a23636;
     --radius: 4px;
 }
@@ -68,7 +68,7 @@ a {
 }
 
 .brand-text span {
-    color: var(--accent);
+    color: #ffcf70;
 }
 
 .brand-logo {
@@ -402,7 +402,7 @@ a {
 }
 
 .stock-limited {
-    color: #b5680a;
+    color: #8c4a00;
     font-weight: 600;
 }
 

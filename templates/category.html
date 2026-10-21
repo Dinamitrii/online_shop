@@ -4,7 +4,7 @@
 {% block content %}
 <h1 class="page-title category-page-title">
     {% if category.image_url %}
-        <img {{ responsive_image_attrs(category.image_url, 320, '44px') }} alt="" class="category-title-photo" fetchpriority="auto" loading="eager" decoding="async">
+        <img {{ responsive_image_attrs(category.image_url, 320, '44px') }} alt="Снимка на категория {{ category.name }}" class="category-title-photo" fetchpriority="auto" loading="eager" decoding="async">
     {% else %}
         <span>{{ category_icons.get(category.name, '🧰') }}</span>
     {% endif %}

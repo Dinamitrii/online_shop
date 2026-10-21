@@ -1,5 +1,6 @@
 from datetime import timezone
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+import gzip
 import os
 import re
 import json
@@ -24,6 +25,61 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_IMAGE_SIZE_MB = 5
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+
+@app.after_request
+def compress_text_response(response):
+    """Gzip textual responses, including small static files, when useful."""
+    if (response.status_code in (204, 206, 304)
+            or response.headers.get('Content-Encoding')):
+        return response
+
+    if response.mimetype not in {
+        'text/html', 'text/plain', 'text/css', 'text/javascript',
+        'application/javascript', 'application/json', 'application/xml',
+        'text/xml', 'image/svg+xml',
+    }:
+        return response
+
+    response.vary.add('Accept-Encoding')
+    accepted = {}
+    for item in request.headers.get('Accept-Encoding', '').lower().split(','):
+        parts = item.strip().split(';')
+        encoding = parts[0].strip()
+        if not encoding:
+            continue
+        quality = 1.0
+        for parameter in parts[1:]:
+            name, separator, value = parameter.strip().partition('=')
+            if separator and name.strip() == 'q':
+                try:
+                    quality = float(value.strip())
+                except ValueError:
+                    quality = 0.0
+        accepted[encoding] = quality
+
+    if accepted.get('gzip', accepted.get('*', 0.0)) <= 0:
+        return response
+
+    # Buffer only small textual file streams; keep large streams untouched.
+    if response.direct_passthrough or response.is_streamed:
+        content_length = response.content_length
+        if content_length is None or content_length > 1_000_000:
+            return response
+        response.direct_passthrough = False
+
+    body = response.get_data()
+    if len(body) < 512:
+        return response
+    compressed = gzip.compress(body, compresslevel=6, mtime=0)
+    if len(compressed) >= len(body):
+        return response
+
+    response.set_data(compressed)
+    response.headers['Content-Encoding'] = 'gzip'
+    response.headers.pop('ETag', None)
+    response.headers.pop('Content-MD5', None)
+    return response
 
 # Responsive images v1
 from responsive_images import install as install_responsive_images, generate as generate_responsive_image

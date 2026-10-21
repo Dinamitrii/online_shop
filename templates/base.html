@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-21ZN5P2JFS"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-21ZN5P2JFS');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% if canonical_url %}
@@ -52,7 +43,7 @@
 <header class="topbar">
     <div class="topbar-inner">
         <a href="{{ url_for('index') }}" class="brand">
-            <img alt="Железария Дианабад"
+            <img alt=""
                  class="brand-logo"
                  height="52"
                  sizes="69px"
@@ -114,6 +105,34 @@
     </svg>
 </a>
 {% endif %}
+
+<script>
+(() => {
+    const loadAnalytics = () => {
+        if (window.shopAnalyticsLoaded) return;
+        window.shopAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-21ZN5P2JFS');
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-21ZN5P2JFS';
+        document.head.appendChild(script);
+    };
+    const scheduleIdle = () => {
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(loadAnalytics, {timeout: 2000});
+        } else {
+            window.setTimeout(loadAnalytics, 100);
+        }
+    };
+
+    if (document.readyState === 'complete') scheduleIdle();
+    else window.addEventListener('load', scheduleIdle, {once: true});
+})();
+</script>
 
 </body>
 </html>

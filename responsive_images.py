@@ -13,7 +13,7 @@ from markupsafe import Markup, escape
 
 SIZES = (80, 160, 240, 320, 480, 640, 960, 1200)
 # Changing the profile creates new URLs instead of overwriting cached images.
-PROFILE = b'shop-webp-v4:content-detection:animation:adaptive-q55-62-70-floor45-52-60:alpha80-60:budget020:80-160-240-320-480-640-960-1200'
+PROFILE = b'shop-webp-v5:content-detection:animation:adaptive-q45-62-70-floor40-52-60:alpha80-60:budget008-020:80-160-240-320-480-640-960-1200'
 FORMATS = {'JPEG', 'PNG', 'WEBP', 'GIF', 'AVIF', 'BMP', 'TIFF'}
 IMAGE_SUFFIXES = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.bmp', '.tif', '.tiff', '.heic', '.heif'}
 MAX_ANIMATION_PIXELS = 40_000_000
@@ -34,11 +34,14 @@ def _atomic_bytes(path, data):
 
 
 def _encode_static(image, quality):
-    # Retain the normal profile for light images. Try at most two moderate
-    # reductions for expensive images, from the original resized pixels each time.
-    budget = max(4096, int(image.width * image.height * 0.20))
+    # Use a tighter byte budget for small thumbnails, where visible dimensions
+    # are limited and transfer savings help the first screen most.
+    ratio = 0.08 if image.width <= 320 else 0.20
+    budget = max(4096, int(image.width * image.height * ratio))
     best = None
-    for q, alpha in ((quality, 80), (quality - 5, 60), (quality - 10, 60)):
+    floor = 40 if image.width <= 320 else quality - 10
+    qualities = tuple(dict.fromkeys((quality, max(floor, quality - 5), max(floor, quality - 10))))
+    for q, alpha in ((q, 80 if q == quality else 60) for q in qualities):
         buffer = io.BytesIO()
         image.save(buffer, 'WEBP', quality=q, alpha_quality=alpha, method=6)
         candidate = buffer.getvalue()
@@ -131,7 +134,7 @@ def generate_result(path):
                     except (OSError, ValueError):
                         valid = False
                 if not valid:
-                    quality = 55 if size <= 320 else 62 if size <= 640 else 70
+                    quality = 45 if size <= 320 else 62 if size <= 640 else 70
                     stream = io.BytesIO()
                     options = dict(quality=quality, method=6, alpha_quality=80)
                     if animated:

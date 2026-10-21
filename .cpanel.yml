@@ -131,6 +131,28 @@ deployment:
       echo "==> Syncing local fonts"
       rsync -a performance-fonts/ "$APP_ROOT/performance-fonts/"
 
+
+      # Rebuild versioned responsive variants using the tighter thumbnail budget.
+      # Original product uploads are retained.
+      echo "==> Rebuilding responsive product image variants"
+      SHOP_ROOT="$APP_ROOT" "$APP_PYTHON" - <<'PY'
+      import os
+      from pathlib import Path
+      from responsive_images import generate_result, inventory
+
+      root = Path(os.environ['SHOP_ROOT']) / 'static' / 'img' / 'products'
+      paths, skipped, failed = inventory(root)
+      optimized = 0
+      errors = len(failed)
+      for path in paths:
+          result = generate_result(path)
+          if result['status'] == 'optimized':
+              optimized += 1
+          elif result['status'] == 'failed':
+              errors += 1
+      print(f'Regenerated variants for {optimized} images; {errors} source/encoding errors.')
+      PY
+
       # ------------------------------------------------------------
       # Verify the deployed application BEFORE restarting Passenger
       # ------------------------------------------------------------

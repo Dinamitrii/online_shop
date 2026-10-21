@@ -14,7 +14,7 @@
         <a class="category-card" href="{{ url_for('category_view', category_id=c.id) }}">
             {% if c.image_url %}
                 <div class="category-icon category-icon-photo">
-                    <img {{ responsive_image_attrs(c.image_url, 320, '150px') }} alt="{{ c.name }}" fetchpriority="{{ 'high' if loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async">
+                    <img {{ responsive_image_attrs(c.image_url, 320, '150px') }} alt="" fetchpriority="{{ 'high' if loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async">
                 </div>
             {% else %}
                 <div class="category-icon">{{ category_icons.get(c.name, '🧰') }}</div>

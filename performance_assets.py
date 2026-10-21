@@ -6,9 +6,59 @@ from flask import abort, send_from_directory, url_for
 from markupsafe import Markup, escape
 from functools import lru_cache
 
+def _minify_css(css):
+    """Remove non-semantic CSS whitespace while preserving strings and calc()."""
+    output = []
+    index = 0
+    quote = None
+    escaped = False
+    pending_space = False
+    while index < len(css):
+        char = css[index]
+        if quote:
+            output.append(char)
+            if escaped:
+                escaped = False
+            elif char == '\\':
+                escaped = True
+            elif char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in ('"', "'"):
+            if pending_space and output and output[-1] not in '{:;,>':
+                output.append(' ')
+            pending_space = False
+            quote = char
+            output.append(char)
+            index += 1
+            continue
+        if char == '/' and index + 1 < len(css) and css[index + 1] == '*':
+            end = css.find('*/', index + 2)
+            if end == -1:
+                break
+            index = end + 2
+            continue
+        if char.isspace():
+            pending_space = True
+            index += 1
+            continue
+        removable = char in '{};,>'
+        if pending_space and output and not removable and output[-1] not in '{:;,>':
+            output.append(' ')
+        pending_space = False
+        if char == '}' and output and output[-1] == ';':
+            output.pop()
+        if removable and output and output[-1] == ' ':
+            output.pop()
+        output.append(char)
+        index += 1
+    return ''.join(output)
+
+
 @lru_cache(maxsize=8)
 def _read_css(path, mtime, size):
-    return Path(path).read_text(encoding='utf-8')
+    return _minify_css(Path(path).read_text(encoding='utf-8'))
 
 
 def install(app):
