@@ -89,12 +89,19 @@ def install(app):
         for original, row in config['fonts'].items():
             fonts_css = fonts_css.replace(original, url_for('shop_performance_font', filename=row['name']))
         output = []
-        # Preload only the Cyrillic heading font that renders the Bulgarian LCP.
-        match = re.search(r'/\* cyrillic \*/\s*(@font-face\s*\{[^}]+\})', config['css'])
-        if match:
-            font_url = re.search(r'url\(([^)]+)\)', match.group(1)).group(1)
-            row = config['fonts'][font_url]
-            output.append(Markup('<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>').format(url_for('shop_performance_font', filename=row['name'])))
+        # Preload only the Cyrillic fonts used above the fold: heading and body.
+        for family, weight in (('Bitter', '600'), ('PT Sans', '400')):
+            pattern = (
+                r'/\* cyrillic \*/\s*(@font-face\s*\{'
+                r'(?=[^}]*font-family:\s*[^;]*' + re.escape(family) + r'[^;]*;)'
+                r'(?=[^}]*font-weight:\s*' + weight + r';)[^}]+\})'
+            )
+            match = re.search(pattern, config['css'])
+            if match:
+                font_url = re.search(r'url\(([^)]+)\)', match.group(1)).group(1)
+                row = config['fonts'][font_url]
+                output.append(Markup('<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>').format(
+                    url_for('shop_performance_font', filename=row['name'])))
         output.append(Markup('<style id="shop-local-fonts">') + Markup(fonts_css) + Markup('</style>'))
         path = Path(app.static_folder) / 'css/style.css'
         try:

@@ -54,18 +54,12 @@
     <div class="contact-map" style="display:block; position:relative; min-height:360px; padding:0; overflow:hidden;">
         <iframe
             title="Карта — Железария Дианабад"
-            src="https://www.google.com/maps?q={{ 'гр. София, бул. Драган Цанков 59-63' | urlencode }}&amp;output=embed"
+            src="https://www.google.com/maps?output=embed&amp;f=d&amp;saddr=Current+Location&amp;daddr={{ 'гр. София, бул. Драган Цанков 59-63, вход Е, гараж 5' | urlencode }}"
             width="100%" height="360"
             style="position:absolute; inset:0; display:block; width:100%; height:100%; border:0;"
             allowfullscreen loading="lazy"
             referrerpolicy="no-referrer-when-downgrade">
         </iframe>
-        <a class="contact-map-directions"
-           href="https://www.google.com/maps/dir/?api=1&amp;destination={{ 'гр. София, бул. Драган Цанков 59-63, вход Е, гараж 5' | urlencode }}"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="Отвори упътвания до Железария Дианабад в Google Maps">
-            Отвори упътвания ↗
-        </a>
     </div>
 </div>
 {% endblock %}
