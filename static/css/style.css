@@ -735,6 +735,26 @@ a.contact-value:hover {
     filter: brightness(0.97);
 }
 
+.contact-map-open-maps {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    right: 12px;
+    padding: 9px 14px;
+    border-radius: 4px;
+    background: var(--steel);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
+}
+
+.contact-map-open-maps:hover,
+.contact-map-open-maps:focus-visible {
+    background: var(--steel-dark);
+}
+
 .contact-map-pin {
     font-size: 42px;
     line-height: 1;
