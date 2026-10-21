@@ -2,7 +2,7 @@
 import json
 import re
 from pathlib import Path
-from flask import abort, send_from_directory, url_for
+from flask import abort, send_from_directory, url_for, request
 from markupsafe import Markup, escape
 from functools import lru_cache
 
@@ -79,6 +79,13 @@ def install(app):
 
     def head():
         fonts_css = config['css']
+        if request.endpoint == 'index':
+            # The homepage headings are Cyrillic; keep Bitter Latin punctuation
+            # out of this page so it falls back to the system serif font.
+            fonts_css = re.sub(
+                r"/\* latin \*/\s*@font-face\s*\{(?=[^}]*font-family: ['\"]Bitter['\"])[^}]+\}\s*",
+                '', fonts_css,
+            )
         for original, row in config['fonts'].items():
             fonts_css = fonts_css.replace(original, url_for('shop_performance_font', filename=row['name']))
         output = []
