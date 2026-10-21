@@ -89,7 +89,7 @@ def install(app):
         for original, row in config['fonts'].items():
             fonts_css = fonts_css.replace(original, url_for('shop_performance_font', filename=row['name']))
         output = []
-        # Preload only the Cyrillic fonts used above the fold: heading and body.
+        # Preconnect the Cyrillic fonts used above the fold: heading and body.
         for family, weight in (('Bitter', '600'), ('PT Sans', '400')):
             pattern = (
                 r'/\* cyrillic \*/\s*(@font-face\s*\{'
@@ -100,7 +100,7 @@ def install(app):
             if match:
                 font_url = re.search(r'url\(([^)]+)\)', match.group(1)).group(1)
                 row = config['fonts'][font_url]
-                output.append(Markup('<link rel="preload" href="{}" as="font" type="font/woff2" crossorigin>').format(
+                output.append(Markup('<link rel="preconnect" href="{}">').format(
                     url_for('shop_performance_font', filename=row['name'])))
         output.append(Markup('<style id="shop-local-fonts">') + Markup(fonts_css) + Markup('</style>'))
         path = Path(app.static_folder) / 'css/style.css'
