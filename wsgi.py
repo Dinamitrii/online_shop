@@ -21,4 +21,11 @@ with app.app_context():
     seed_data()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(
+        debug=False,
+        use_reloader=False,
+        ssl_context=(
+            "/tmp/online-shop.pem",
+            "/tmp/online-shop-key.pem",
+        ),
+    )
