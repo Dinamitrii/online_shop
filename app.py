@@ -36,7 +36,8 @@ def compress_text_response(response):
 
     if response.mimetype not in {
         'text/html', 'text/plain', 'text/css', 'text/javascript',
-        'application/javascript', 'application/json', 'application/xml',
+        'application/javascript', 'application/json', 'application/ai-catalog+json',
+        'application/xml',
         'text/xml', 'image/svg+xml',
     }:
         return response
@@ -1140,6 +1141,48 @@ def init_db_command():
 @app.route('/robots.txt')
 def static_from_root():
     return send_from_directory(app.static_folder, 'robots.txt')
+
+
+@app.route('/llms.txt')
+def llms_txt():
+    return send_from_directory(app.static_folder, 'llms.txt', mimetype='text/plain; charset=utf-8')
+
+
+@app.route('/ai-catalogg.json')
+@app.route('/ai-catalog.json')
+def ai_catalog_json():
+    """Публичен каталог за AI асистенти; съдържа само публични продуктови данни."""
+    site_url = app.config['CANONICAL_SITE_URL'].rstrip('/')
+    availability_map = {
+        'in_stock': 'InStock',
+        'limited': 'LimitedAvailability',
+        'on_order': 'PreOrder',
+    }
+    products = []
+    rows = db.session.query(Product, Category.name).outerjoin(
+        Category, Product.category_id == Category.id
+    ).order_by(Product.id).all()
+    for product, category_name in rows:
+        state = availability_map.get(product.availability, 'InStock') if product.stock > 0 else 'OutOfStock'
+        products.append({
+            'id': str(product.id),
+            'name': product.name,
+            'url': f"{site_url}{url_for('product_view', product_id=product.id)}",
+            'description': product.description or '',
+            'category': category_name or '',
+            'price': {'amount': f'{product.price:.2f}', 'currency': 'EUR'},
+            'availability': state,
+            'image': f"{site_url}{product.image_url}" if product.image_url else None,
+        })
+
+    payload = {
+        'version': '1.0',
+        'store': {'name': 'Железария Дианабад', 'url': site_url},
+        'products': products,
+    }
+    response = Response(json.dumps(payload, ensure_ascii=False), mimetype='application/ai-catalog+json')
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    return response
 
 
 # --- sitemap:begin ---
