@@ -35,7 +35,7 @@ python app.py
 ## Инсталация
 
 ```bash
-cd hardware_store
+cd online_shop
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt

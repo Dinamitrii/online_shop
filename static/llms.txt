@@ -8,7 +8,7 @@
 - [Политика за връщане](https://e-jelezaria.bg/returns)
 
 ## Машинночетими данни
-- [AI продуктов каталог](https://e-jelezaria.bg/ai-catalogg.json)
+- [AI продуктов каталог](https://e-jelezaria.bg/ai-catalog.json)
 - [Карта на сайта](https://e-jelezaria.bg/sitemap.xml)
 
 ## Бележки
