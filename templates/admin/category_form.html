@@ -6,6 +6,8 @@
     <input type="hidden" name="csrf_token" value="{{ session['category_edit_csrf'] }}">
     <label for="name">Име на категорията</label>
     <input type="text" id="name" name="name" value="{{ name }}" required maxlength="100">
+    <label for="latin_name">Име на латиница (за търсачки и структурирани данни)</label>
+    <input type="text" id="latin_name" name="latin_name" value="{{ latin_name }}" maxlength="100">
     <small class="field-hint">Промяната се показва и в магазина. Продуктите остават в тази категория.</small>
     <div class="admin-form-actions">
         <button type="submit" class="btn">Запази</button>

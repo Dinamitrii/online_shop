@@ -6,8 +6,6 @@ import re
 import json
 from urllib.parse import quote
 import tempfile
-import csv
-import io
 import uuid
 import secrets
 from functools import wraps
@@ -359,9 +357,15 @@ def index():
     return render_template('index.html', categories=categories, featured=featured)
 
 
-@app.route('/category/<int:category_id>')
-def category_view(category_id):
-    category = Category.query.get_or_404(category_id)
+@app.route('/category/')
+def category_index():
+    categories = storefront_categories()
+    featured = Product.query.order_by(Product.id.desc()).limit(8).all()
+    return render_template('index.html', categories=categories, featured=featured)
+
+@app.route('/category/<latin_name>')
+def category_view(latin_name):
+    category = Category.query.filter_by(latin_name=latin_name).first_or_404()
     categories = storefront_categories()
     q = request.args.get('q', '').strip()
     products_query = Product.query.filter_by(category_id=category.id)
@@ -397,9 +401,9 @@ def contacts():
     return render_template('contacts.html', categories=categories)
 
 
-@app.route('/product/<int:product_id>')
-def product_view(product_id):
-    product = Product.query.get_or_404(product_id)
+@app.route('/product/<latin_name>')
+def product_view(latin_name):
+    product = Product.query.filter_by(latin_name=latin_name).first_or_404()
     categories = storefront_categories()
     related = Product.query.filter(
         Product.category_id == product.category_id,
@@ -829,7 +833,7 @@ def sorted_categories(sort):
     }
     rows = sorted(rows, key=keys[sort],
                   reverse=sort in ('newest', 'name_desc', 'count_desc'))
-    return [dict(id=c.id, name=c.name, image_url=c.image_url, product_count=count)
+    return [dict(id=c.id, name=c.name, latin_name=c.latin_name, image_url=c.image_url, product_count=count)
             for c, count in rows]
 
 
@@ -854,20 +858,24 @@ def admin_category_edit(category_id):
         if not safe_equal(session['category_edit_csrf'], request.form.get('csrf_token', '')):
             abort(400)
         name = request.form.get('name', '').strip()
+        latin_name = request.form.get('latin_name', '').strip()
         if not name:
             flash('Името на категорията е задължително.', 'error')
         elif len(name) > 100:
             flash('Името може да съдържа най-много 100 символа.', 'error')
         elif Category.query.filter(Category.name == name, Category.id != category.id).first():
             flash('Вече съществува категория с това име.', 'error')
+        elif latin_name and Category.query.filter(Category.latin_name == latin_name, Category.id != category.id).first():
+            flash('Вече съществува категория с това латинско име.', 'error')
         else:
             from sqlalchemy.exc import IntegrityError
             category.name = name
+            category.latin_name = latin_name if latin_name else None
             try:
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
-                flash('Вече съществува категория с това име.', 'error')
+                flash('Вече съществува категория с това име или латинско име.', 'error')
             else:
                 flash('Категорията беше обновена.', 'success')
                 return redirect(url_for('admin_categories', sort=sort))
@@ -1019,42 +1027,42 @@ def seed_data():
     # Цените са в евро (EUR), конвертирани по фиксирания официален курс
     # на присъединяване на България към еврозоната: 1 EUR = 1.95583 лв.
     categories_data = {
-        'Ръчни инструменти': [
+        'Ръчни инструменти': ('Racni instrumenti', [
             ('Чук дърводелски 500г', 7.62, 'Стоманена глава, дървена дръжка, за общи ремонтни дейности.', 40),
             ('Комплект отвертки 6бр', 9.97, 'Комбиниран комплект права и кръстата глава, ергономична дръжка.', 60),
             ('Клещи комбинирани 180мм', 5.73, 'Хромирани, за рязане и захващане на тел и кабел.', 35),
             ('Ножовка за метал', 4.29, 'С резервно острие, за прецизно рязане.', 25),
             ('Метър рулетка 5м', 3.53, 'Стоманена лента с автоматично прибиране и спирачка.', 80),
-        ],
-        'Електроинструменти': [
+        ]),
+        'Електроинструменти': ('Elektrornstrumenti', [
             ('Акумулаторен винтоверт 18V', 45.50, 'С 2 батерии и куфар, до 45Nm въртящ момент.', 20),
             ('Ъглошлайф 125мм 900W', 32.98, 'За рязане и шлайфане на метал и камък.', 18),
             ('Перфоратор SDS+ 700W', 57.26, 'За пробиване на бетон, тухла и камък.', 12),
             ('Бормашина ударна 650W', 24.44, 'С регулиране на оборотите и реверс.', 22),
-        ],
-        'Крепежни елементи': [
+        ]),
+        'Крепежни елементи': ('Krepezhni elementi', [
             ('Дюбели 8х40мм (100бр)', 2.20, 'Найлонови дюбели за бетон и тухла.', 200),
             ('Винтове за дърво 4х40 (100бр)', 2.61, 'Поцинковани, кръстат шлиц.', 150),
             ('Болтове М8х60 (20бр)', 3.45, 'Поцинковани болтове с гайки и шайби.', 90),
             ('Пирони строителни 3.5х80 (1кг)', 1.99, 'Поцинковани, за дървени конструкции.', 100),
-        ],
-        'Боя и лакове': [
+        ]),
+        'Боя и лакове': ('Boya i lakove', [
             ('Латекс бяла боя 10л', 17.84, 'Миеща се латексова боя за стени и тавани.', 30),
             ('Грунд универсален 5л', 11.45, 'Подходящ за бетон, мазилка и гипскартон.', 28),
             ('Спрей боя черна 400мл', 2.86, 'Гланцова, за метал и дърво.', 55),
             ('Лак за дърво безцветен 2.5л', 9.66, 'Устойчив на влага и надраскване.', 24),
-        ],
-        'Ключалки и брави': [
+        ]),
+        'Ключалки и брави': ('Klyuchalki i bravni', [
             ('Секретна брава цилиндрична', 12.53, 'Комплект с 3 ключа, за входни врати.', 15),
             ('Катинар стоманен 50мм', 5.01, 'С 3 ключа, устойчив на прерязване.', 40),
             ('Дръжка за врата с шпионка', 8.28, 'Хромирано покритие, комплект за монтаж.', 20),
-        ],
-        'Градина': [
+        ]),
+        'Градина': ('Gradina', [
             ('Градински маркуч 25м', 15.29, 'Гъвкав, устойчив на UV лъчи, с конектори.', 18),
             ('Лопата права с дръжка', 6.85, 'Стоманено острие, дървена дръжка.', 26),
             ('Градински ножици за клони', 9.00, 'С тефлоново покритие на острието.', 22),
-        ],
-        'Мазилки и лепила': [
+        ]),
+        'Мазилки и лепила': ('Mazilki i leplila', [
             ('Циментова замазка 25кг', 7.50, 'За изравняване на подове преди полагане на настилка.', 45),
             ('Гипсова мазилка машинна 30кг', 8.90, 'За вътрешно измазване на стени и тавани.', 38),
             ('Декоративна мазилка "Камешек" 25кг', 14.50, 'Фасадна мазилка с фина зърнеста текстура.', 20),
@@ -1063,7 +1071,7 @@ def seed_data():
             ('Шпакловка финна 20кг', 11.90, 'За заглаждане преди боядисване, готова за шлайфане.', 30),
             ('Лепило монтажно "Течни пирони" 310мл', 3.40, 'Силно фиксиращо, за дърво, метал, керамика и бетон.', 70),
             ('Грунд контактен за бетон 10л', 13.20, 'Подобрява сцеплението преди мазилка или замазка.', 22),
-        ],
+        ]),
     }
 
     # Зареждаме примерните категории/продукти само при напълно празна база данни
@@ -1073,8 +1081,8 @@ def seed_data():
     if Category.query.first():
         return
 
-    for cat_name, products in categories_data.items():
-        category = Category(name=cat_name)
+    for cat_name, (latin_name, products) in categories_data.items():
+        category = Category(name=cat_name, latin_name=latin_name)
         db.session.add(category)
         db.session.flush()
         for name, price, desc, stock in products:
@@ -1091,6 +1099,62 @@ def parse_availability(form):
     if value not in Product.AVAILABILITY_CHOICES:
         raise ValueError('Невалиден статус на наличност.')
     return value
+
+
+def transliterate_to_latin(text):
+    """Фонетично превръщане на български текст в латинска транслитерация.
+    Използва стандартна българско-латинска транслитерация (ISO 9 адаптирана)."""
+    if not text:
+        return ''
+    # Пълна транслитерация: кирилица -> латиница
+    cyrillic_to_latin = {
+        'А': 'A', 'а': 'a',
+        'Б': 'B', 'б': 'b',
+        'В': 'V', 'в': 'v',
+        'Г': 'G', 'г': 'g',
+        'Д': 'D', 'д': 'd',
+        'Е': 'E', 'е': 'e',
+        'Ж': 'Zh', 'ж': 'zh',
+        'З': 'Z', 'з': 'z',
+        'И': 'I', 'и': 'i',
+        'Й': 'Y', 'й': 'y',
+        'К': 'K', 'к': 'k',
+        'Л': 'L', 'л': 'l',
+        'М': 'M', 'м': 'm',
+        'Н': 'N', 'н': 'n',
+        'О': 'O', 'о': 'o',
+        'П': 'P', 'п': 'p',
+        'Р': 'R', 'р': 'r',
+        'С': 'S', 'с': 's',
+        'Т': 'T', 'т': 't',
+        'У': 'U', 'у': 'u',
+        'Ф': 'F', 'ф': 'f',
+        'Х': 'H', 'х': 'h',
+        'Ц': 'C', 'ц': 'c',
+        'Ч': 'Ch', 'ч': 'ch',
+        'Ш': 'Sh', 'ш': 'sh',
+        'Щ': 'Sht', 'щ': 'sht',
+        'Ъ': '', 'ъ': '',
+        'Ь': '', 'ь': '',
+        'Ю': 'Yu', 'ю': 'yu',
+        'Я': 'Ya', 'я': 'ya',
+    }
+    text = ''.join(cyrillic_to_latin.get(ch, ch) for ch in text)
+    # Замени специални символи с тире
+    text = re.sub(r'[^\w\-]', '-', text)
+    # Намали повтарящи се тире
+    text = re.sub(r'-{2,}', '-', text)
+    # Премахни начално и крайно тире
+    text = text.strip('-')
+    return text
+
+
+def slugify(text):
+    """Подготвя text за slug (малки букви, без специални символи)."""
+    import unicodedata
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    text = re.sub(r'[^a-zA-Z0-9]+', '-', text).strip('-').lower()
+    return text
 
 
 def migrate_db():
@@ -1122,10 +1186,26 @@ def migrate_db():
             conn.execute(text("ALTER TABLE categories ADD COLUMN image_url VARCHAR(300) DEFAULT ''"))
             conn.commit()
 
+        if 'latin_name' not in category_cols:
+            conn.execute(text("ALTER TABLE categories ADD COLUMN latin_name VARCHAR(100) DEFAULT NULL"))
+            conn.commit()
+
         product_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(products)"))]
         if 'availability' not in product_cols:
             conn.execute(text("ALTER TABLE products ADD COLUMN availability VARCHAR(16) DEFAULT 'in_stock'"))
             conn.commit()
+
+        if 'latin_name' not in product_cols:
+            conn.execute(text("ALTER TABLE products ADD COLUMN latin_name VARCHAR(200) DEFAULT NULL"))
+            conn.commit()
+
+        # Фонетично попълване на latin_name за продукти (ако липсва)
+        if 'latin_name' in product_cols and Product.query.filter_by(latin_name=None).first():
+            products = Product.query.all()
+            for p in products:
+                if not p.latin_name:
+                    p.latin_name = transliterate_to_latin(p.name)
+            db.session.commit()
 
 
 @app.cli.command('init-db')

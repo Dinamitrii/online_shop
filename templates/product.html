@@ -12,7 +12,7 @@
     </div>
     <div class="product-detail-info">
         <p class="breadcrumb">
-            <a href="{{ url_for('category_view', category_id=product.category.id) }}">{{ product.category.name }}</a>
+            <a href="{{ url_for('category_view', latin_name=product.category.latin_name) }}">{{ product.category.name }}</a>
         </p>
         <h1>{{ product.name }}</h1>
         <div class="product-price product-price-large">{{ '%.2f'|format(product.price) }} €</div>
@@ -49,7 +49,7 @@
 <div class="product-grid">
     {% for p in related %}
     <div class="product-card">
-        <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+        <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-thumb">
             {% if p.image_url %}
                 <img {{ responsive_image_attrs(p.image_url, 320, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}" fetchpriority="auto" loading="lazy" decoding="async">
             {% else %}
@@ -57,7 +57,7 @@
             {% endif %}
         </a>
         <div class="product-info">
-            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+            <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-name">{{ p.name }}</a>
             <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
         </div>
     </div>

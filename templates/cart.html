@@ -19,7 +19,7 @@
         {% for item in items %}
         <tr>
             <td>
-                <a href="{{ url_for('product_view', product_id=item.product.id) }}">{{ item.product.name }}</a>
+                <a href="{{ url_for('product_view', latin_name=item.product.latin_name) }}">{{ item.product.name }}</a>
             </td>
             <td>{{ '%.2f'|format(item.product.price) }} €</td>
             <td>

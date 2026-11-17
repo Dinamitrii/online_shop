@@ -29,7 +29,7 @@
     <thead>
         <tr>
             <th>Снимка</th>
-            <th>#</th>
+            <th>Латинско име</th>
             <th>Име</th>
             <th>Брой продукти</th>
             <th></th>
@@ -45,7 +45,7 @@
                     <span class="admin-category-thumb-placeholder">{{ category_icons.get(c.name, '🧰') }}</span>
                 {% endif %}
             </td>
-            <td>{{ c.id }}</td>
+            <td{% if c.latin_name %} class="latin-name-cell"{% endif %}>{{ c.latin_name or '' }}</td>
             <td>{{ c.name }}</td>
             <td>{{ c.product_count }}</td>
             <td class="admin-actions">

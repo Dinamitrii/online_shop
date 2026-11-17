@@ -9,6 +9,7 @@ class Category(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
+    latin_name = db.Column(db.String(100), nullable=True, unique=True)
     image_url = db.Column(db.String(300), default='')
 
     products = db.relationship('Product', backref='category', lazy=True)
@@ -27,21 +28,31 @@ class Product(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    latin_name = db.Column(db.String(200), nullable=True, unique=True)
     description = db.Column(db.Text, default='')
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
-    # 'in_stock' (обикновена наличност), 'limited' (ограничена — предупреждение, но поръчваема),
-    # 'on_order' (по поръчка — брои се същото поле 'stock', но означава наличен за поръчка брой).
     availability = db.Column(db.String(16), nullable=False, default='in_stock')
     image_url = db.Column(db.String(300), default='')
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
 
     AVAILABILITY_CHOICES = ('in_stock', 'limited', 'on_order')
-    AVAILABILITY_LABELS = {'in_stock': 'В наличност', 'limited': 'Ограничена наличност',
-                           'on_order': 'По поръчка'}
+    AVAILABILITY_LABELS = {
+        'in_stock': 'В наличност',
+        'limited': 'Ограничена наличност',
+        'on_order': 'По поръчка'
+    }
     # CSS клас (static/css/style.css) и икона за етикета на статуса — за витрината и админ панела.
-    AVAILABILITY_BADGE_CLASS = {'in_stock': 'stock-ok', 'limited': 'stock-limited', 'on_order': 'stock-onorder'}
-    AVAILABILITY_ICONS = {'in_stock': '✔', 'limited': '⚠', 'on_order': '⏳'}
+    AVAILABILITY_BADGE_CLASS = {
+        'in_stock': 'stock-ok',
+        'limited': 'stock-limited',
+        'on_order': 'stock-onorder'
+    }
+    AVAILABILITY_ICONS = {
+        'in_stock': '✔',
+        'limited': '⚠',
+        'on_order': '⏳'
+    }
 
     @property
     def in_stock_for_order(self):

@@ -14,7 +14,7 @@
 <div class="product-grid">
     {% for p in products %}
     <div class="product-card">
-        <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+        <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-thumb">
             {% if p.image_url %}
                 <img {{ responsive_image_attrs(p.image_url, 640, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}" fetchpriority="{{ 'high' if loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async">
             {% else %}
@@ -22,7 +22,7 @@
             {% endif %}
         </a>
         <div class="product-info">
-            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+            <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-name">{{ p.name }}</a>
             <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
             {% include '_availability_badge.html' %}
             {% if p.stock > 0 %}

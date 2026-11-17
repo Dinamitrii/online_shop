@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ category.name }} · Железария Дианабад{% endblock %}
+{% block title %}{{ category.latin_name or category.name }} · Железария Дианабад{% endblock %}
 
 {% block content %}
 <h1 class="page-title category-page-title">
@@ -8,11 +8,11 @@
     {% else %}
         <span>{{ category_icons.get(category.name, '🧰') }}</span>
     {% endif %}
-    {{ category.name }}
+    {{ category.latin_name or category.name }}
 </h1>
 
 <form class="inline-search list-toolbar" method="get">
-    <input type="text" name="q" placeholder="Търсене в {{ category.name }}..." value="{{ q }}">
+    <input type="text" name="q" placeholder="Търсене в {{ category.latin_name or category.name }}..." value="{{ q }}">
     {% include 'sort_select.html' %}
     <button type="submit" class="btn btn-small">Филтрирай</button>
 </form>
@@ -21,7 +21,7 @@
 <div class="product-grid">
     {% for p in products %}
     <div class="product-card">
-        <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+        <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-thumb">
             {% if p.image_url %}
                 <img {{ responsive_image_attrs(p.image_url, 640, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}" fetchpriority="{{ 'high' if loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async">
             {% else %}
@@ -29,7 +29,7 @@
             {% endif %}
         </a>
         <div class="product-info">
-            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+            <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-name">{{ p.name }}</a>
             <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
             {% include '_availability_badge.html' %}
             {% if p.stock > 0 %}

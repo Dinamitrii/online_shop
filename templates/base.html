@@ -78,7 +78,7 @@
     </div>
     <nav class="categories-nav">
         {% for c in categories %}
-            <a href="{{ url_for('category_view', category_id=c.id) }}">{{ c.name }}</a>
+            <a href="{{ url_for('category_view', latin_name=c.latin_name) }}">{{ c.name }}</a>
         {% endfor %}
     </nav>
 </header>

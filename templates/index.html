@@ -11,7 +11,7 @@
     <h2 class="section-title">Категории</h2>
     <div class="category-grid">
         {% for c in categories %}
-        <a class="category-card" href="{{ url_for('category_view', category_id=c.id) }}">
+        <a class="category-card" href="{{ url_for('category_view', latin_name=c.latin_name) }}">
             {% if c.image_url %}
                 <div class="category-icon category-icon-photo">
                     <img {{ responsive_image_attrs(c.image_url, 320, '150px') }} alt="{{ 'Gardening and yard' if c.name|lower == 'градина' else '' }}" fetchpriority="{{ 'high' if c.name|lower == 'градина' or loop.index <= 2 else 'auto' }}" loading="{{ 'eager' if c.name|lower == 'градина' or loop.index <= 6 else 'lazy' }}" decoding="async">
@@ -30,7 +30,7 @@
     <div class="product-grid">
         {% for p in featured %}
         <div class="product-card">
-            <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-thumb">
+            <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-thumb">
                 {% if p.image_url %}
                     <img {{ responsive_image_attrs(p.image_url, 320, '(max-width: 600px) 100vw, 300px') }} alt="{{ p.name }}" fetchpriority="auto" loading="lazy" decoding="async">
                 {% else %}
@@ -38,7 +38,7 @@
                 {% endif %}
             </a>
             <div class="product-info">
-                <a href="{{ url_for('product_view', product_id=p.id) }}" class="product-name">{{ p.name }}</a>
+                <a href="{{ url_for('product_view', latin_name=p.latin_name) }}" class="product-name">{{ p.name }}</a>
                 <div class="product-price">{{ '%.2f'|format(p.price) }} €</div>
                 {% include '_availability_badge.html' %}
                 {% if p.stock > 0 %}
