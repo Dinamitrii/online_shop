@@ -1247,7 +1247,7 @@ def ai_catalog_json():
         products.append({
             'id': str(product.id),
             'name': product.name,
-            'url': f"{site_url}{url_for('product_view', product_id=product.id)}",
+            'url': f"{site_url}{url_for('product_view', latin_name=product.latin_name)}",
             'description': product.description or '',
             'category': category_name or '',
             'price': {'amount': f'{product.price:.2f}', 'currency': 'EUR'},
