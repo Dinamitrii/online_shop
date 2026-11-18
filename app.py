@@ -833,7 +833,8 @@ def sorted_categories(sort):
     }
     rows = sorted(rows, key=keys[sort],
                   reverse=sort in ('newest', 'name_desc', 'count_desc'))
-    return [dict(id=c.id, name=c.name, latin_name=c.latin_name, image_url=c.image_url, product_count=count)
+    return [dict(id=c.id, name=c.name, latin_name=(c.latin_name or ''),
+                  image_url=c.image_url, product_count=count)
             for c, count in rows]
 
 
