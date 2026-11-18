@@ -1430,7 +1430,7 @@ def sitemap_xml():
     for category in categories:
         add_url(
             'category_view',
-            category_id=category.id,
+            latin_name=category.latin_name,
             lastmod=category_lastmod.get(category.id),
             images=[_sitemap_image_url(site_url, category.image_url)] if category.image_url else None,
         )
@@ -1438,7 +1438,7 @@ def sitemap_xml():
     for product in products:
         add_url(
             'product_view',
-            product_id=product.id,
+            latin_name=product.latin_name,
             lastmod=getattr(product, 'updated_at', None),
             images=[_sitemap_image_url(site_url, product.image_url)] if product.image_url else None,
         )
