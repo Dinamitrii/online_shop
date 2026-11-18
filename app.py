@@ -1208,6 +1208,14 @@ def migrate_db():
                     p.latin_name = transliterate_to_latin(p.name)
             db.session.commit()
 
+        # Фонетично попълване на latin_name за категории (ако липсва)
+        if 'latin_name' in category_cols and Category.query.filter_by(latin_name=None).first():
+            categories = Category.query.all()
+            for c in categories:
+                if not c.latin_name:
+                    c.latin_name = transliterate_to_latin(c.name)
+            db.session.commit()
+
 
 @app.cli.command('init-db')
 def init_db_command():
