@@ -660,7 +660,7 @@ def admin_product_new():
 
         product = Product(name=name, price=price, stock=stock, availability=availability,
                           category_id=category_id, description=description,
-                          image_url=image_url)
+                          image_url=image_url, latin_name=transliterate_to_latin(name))
         db.session.add(product)
         db.session.commit()
         flash(f'Продукт "{name}" беше създаден.', 'success')
@@ -806,7 +806,7 @@ def admin_categories():
                 flash(str(e), 'error')
                 return redirect(url_for('admin_categories'))
 
-            db.session.add(Category(name=name, image_url=image_url))
+            db.session.add(Category(name=name, image_url=image_url, latin_name=transliterate_to_latin(name)))
             db.session.commit()
             flash(f'Категория "{name}" беше създадена.', 'success')
         return redirect(url_for('admin_categories'))

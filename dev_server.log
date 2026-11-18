@@ -174,3 +174,11 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'catego
 127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/8b41ad8f5009449eae83a6ea6b91f040.jpeg.93ff7297e6ed57d7.320.webp HTTP/1.1[0m" 304 -
 127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/03e1d4b828864463b03883608e7c6da5.png.f80c852c4cc1362c.320.webp HTTP/1.1[0m" 304 -
 127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/fe773c176e9b47ddb2bba3b22443c047.png.0bae28a08ac5989d.320.webp HTTP/1.1[0m" 304 -
+ * Detected change in '/home/dinamitrii/PycharmProjects/online_shop/app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 118-545-338
+ * Detected change in '/home/dinamitrii/PycharmProjects/online_shop/app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 118-545-338
