@@ -1,0 +1,176 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 118-545-338
+127.0.0.1 - - [18/Nov/2026 04:32:04] "[35m[1mGET / HTTP/1.1[0m" 500 -
+Traceback (most recent call last):
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 1498, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 1476, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/app.py", line 357, in index
+    return render_template('index.html', categories=categories, featured=featured)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/dinamitrii/PycharmProjects/online_shop/templates/index.html", line 1, in top-level template code
+    {% extends 'base.html' %}
+  File "/home/dinamitrii/PycharmProjects/online_shop/templates/base.html", line 81, in top-level template code
+    <a href="{{ url_for('category_view', latin_name=c.latin_name) }}">{{ c.name }}</a>
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 1084, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/flask/app.py", line 1073, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dinamitrii/PycharmProjects/online_shop/.venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 901, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'category_view'. Did you forget to specify values ['latin_name']?
+127.0.0.1 - - [18/Nov/2026 04:32:05] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:32:05] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:32:05] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=aJ4nD2kMuLyJ9n0Jjcrj HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:32:05] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/d3746ca07edc45e29417bd532c1f1d7c.png.7b48bc616ed95c28.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/22839c99dc254dcca28baa21ca0a0b78.jpeg.874d0f3c813415ae.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/18d0a3ca6ae0423693880ce0d267f849.png.e90297b385f29e60.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/brand/logo-70.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/5c9c160da6a44d4eb5776b016c558755.jpg.47bba9c340b3f673.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/d9a9b49e2667473a8f7e50e6d9eb8afa.png.7a270414b224c397.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/08860e180e934d5894d538abb93a7e11.png.49685201ee8dffad.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/9167d758df954781ae7548e822dbf503.jpeg.2d33e2c377138815.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /_shop-fonts/305ea448603057c5.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /_shop-fonts/3259cd13d9825252.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /_shop-fonts/38d3aa3b6c9ccdc9.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /_shop-fonts/5f81586551e5053b.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /_shop-fonts/9503de4dcabf36b0.woff2 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/43e398161896466c8e71d5b2e9dc47af.png.da13f2c7c915efb8.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/e03b6d67d062483f85cbe9e66cebe3ac.png.2d64741d3eef7284.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/4481c68731884dc1aeca750c05d9e71d.jpg.67e6a1b071fb011a.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/d434167cac7d444cb977a5e4dd766ce4.png.527468165ccf587b.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/3454b0e9729a41dc87f73ae79a43235d.png.c4efb63a0e8a391b.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/50f0fd1b71f34154b4eefeca3d043515.png.223ac3afa1f515c1.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/c6a0ef5728de446b9f35c28948cf9c34.jpeg.92ede2f7abe9f55f.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/1ae3fc8326d04a088f39ae88ced746d3.jpg.44932ea06213d33d.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/4e9f9db615f44f97851ffaae91cab149.jpg.45c75898c36d52d7.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/261f8d82c728473792d8ff86eecc1773.webp.4dacd504fdcd1d85.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/920f404fd48f4c969cbd439e9ad82660.png.75eed7ccff875864.160.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/d2c53d0157e24161a07ed0d401573845.jpg.5c06dfce03e5c048.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/fee9cf7f48494991a296f0a8a535f48d.jpg.40f4de0810e23455.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/7b1ca5b629ff4bf495f21d0d3d842532.jpg.0043d79436bfe602.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/products/_responsive/a09d6a0c98594771a3e9cd82fb72df3d.jpg.40f4de0810e23455.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/favicon/apple-icon-180x180.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:43] "GET /static/img/favicon/favicon-16x16.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:45] "GET /category/Narushen-trgovski-vid HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:45] "[36mGET /static/img/products/_responsive/08860e180e934d5894d538abb93a7e11.png.49685201ee8dffad.80.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:45] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "GET /category/Mazilki-i-lepila HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/30a73e1fc3dd4e84978d122fe3d4038a.jpg.b0576e9bfe4cf139.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/e64660edbf214de5a99288724a4723a8.jpg.6c6815ef5bdf7658.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/d9a9b49e2667473a8f7e50e6d9eb8afa.png.7a270414b224c397.80.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/6009732e51b34bfc9823ebf620130d58.jpg.0b5e8742795c971f.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/14bfd742d3254c509685473a804cd66f.webp.ce866295b496b06f.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/products/_responsive/dedac381b4f54076ab62e3ca881a8449.jpg.fe37bae3d6c30d79.480.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:47] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:33:54] "GET /contacts HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:33:54] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:09] "GET /returns HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:09] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/18d0a3ca6ae0423693880ce0d267f849.png.e90297b385f29e60.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/22839c99dc254dcca28baa21ca0a0b78.jpeg.874d0f3c813415ae.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/d3746ca07edc45e29417bd532c1f1d7c.png.7b48bc616ed95c28.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/c6a0ef5728de446b9f35c28948cf9c34.jpeg.92ede2f7abe9f55f.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/4e9f9db615f44f97851ffaae91cab149.jpg.45c75898c36d52d7.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/7b1ca5b629ff4bf495f21d0d3d842532.jpg.0043d79436bfe602.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/fee9cf7f48494991a296f0a8a535f48d.jpg.40f4de0810e23455.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/d2c53d0157e24161a07ed0d401573845.jpg.5c06dfce03e5c048.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/4481c68731884dc1aeca750c05d9e71d.jpg.67e6a1b071fb011a.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/1ae3fc8326d04a088f39ae88ced746d3.jpg.44932ea06213d33d.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/3454b0e9729a41dc87f73ae79a43235d.png.c4efb63a0e8a391b.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/d434167cac7d444cb977a5e4dd766ce4.png.527468165ccf587b.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/e03b6d67d062483f85cbe9e66cebe3ac.png.2d64741d3eef7284.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/920f404fd48f4c969cbd439e9ad82660.png.75eed7ccff875864.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/50f0fd1b71f34154b4eefeca3d043515.png.223ac3afa1f515c1.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/5c9c160da6a44d4eb5776b016c558755.jpg.47bba9c340b3f673.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/261f8d82c728473792d8ff86eecc1773.webp.4dacd504fdcd1d85.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/d9a9b49e2667473a8f7e50e6d9eb8afa.png.7a270414b224c397.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/a09d6a0c98594771a3e9cd82fb72df3d.jpg.40f4de0810e23455.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/9167d758df954781ae7548e822dbf503.jpeg.2d33e2c377138815.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/08860e180e934d5894d538abb93a7e11.png.49685201ee8dffad.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:24] "[36mGET /static/img/products/_responsive/43e398161896466c8e71d5b2e9dc47af.png.da13f2c7c915efb8.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/d3746ca07edc45e29417bd532c1f1d7c.png.7b48bc616ed95c28.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/22839c99dc254dcca28baa21ca0a0b78.jpeg.874d0f3c813415ae.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/18d0a3ca6ae0423693880ce0d267f849.png.e90297b385f29e60.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/4e9f9db615f44f97851ffaae91cab149.jpg.45c75898c36d52d7.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/c6a0ef5728de446b9f35c28948cf9c34.jpeg.92ede2f7abe9f55f.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/1ae3fc8326d04a088f39ae88ced746d3.jpg.44932ea06213d33d.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/4481c68731884dc1aeca750c05d9e71d.jpg.67e6a1b071fb011a.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/d2c53d0157e24161a07ed0d401573845.jpg.5c06dfce03e5c048.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/3454b0e9729a41dc87f73ae79a43235d.png.c4efb63a0e8a391b.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/7b1ca5b629ff4bf495f21d0d3d842532.jpg.0043d79436bfe602.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/fee9cf7f48494991a296f0a8a535f48d.jpg.40f4de0810e23455.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/920f404fd48f4c969cbd439e9ad82660.png.75eed7ccff875864.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/e03b6d67d062483f85cbe9e66cebe3ac.png.2d64741d3eef7284.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/261f8d82c728473792d8ff86eecc1773.webp.4dacd504fdcd1d85.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/9167d758df954781ae7548e822dbf503.jpeg.2d33e2c377138815.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/d434167cac7d444cb977a5e4dd766ce4.png.527468165ccf587b.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/a09d6a0c98594771a3e9cd82fb72df3d.jpg.40f4de0810e23455.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/5c9c160da6a44d4eb5776b016c558755.jpg.47bba9c340b3f673.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/50f0fd1b71f34154b4eefeca3d043515.png.223ac3afa1f515c1.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/d9a9b49e2667473a8f7e50e6d9eb8afa.png.7a270414b224c397.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/43e398161896466c8e71d5b2e9dc47af.png.da13f2c7c915efb8.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:25] "[36mGET /static/img/products/_responsive/08860e180e934d5894d538abb93a7e11.png.49685201ee8dffad.160.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "GET /category/CERESIT HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "GET /static/img/products/_responsive/3104b132cdfb4ba8bc687eeae2afb076.jpg.79d671ba63bee1cd.320.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "GET /static/img/products/_responsive/d434167cac7d444cb977a5e4dd766ce4.png.527468165ccf587b.80.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "GET /static/img/products/_responsive/b74ef2e548eb451db1df75b19c50e7e9.webp.34d84917b9a2a09e.480.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "GET /static/img/products/_responsive/024f77d8aa6b4535b0873f2784254a3c.webp.6f70bf7997a3e367.480.webp HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:27] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "GET /category/Rchni-instrumenti HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/bc471a75685f4ac8b0cbddbd7417c3f7.jpg.987fd39e9dc8c1ef.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/brand/logo-70.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/d3746ca07edc45e29417bd532c1f1d7c.png.7b48bc616ed95c28.80.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/09843b64dbaf480da7bb848782ddde6f.jpg.85387d2f38234ecc.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/5f167bcb2af44a7b941a1180279cb84c.webp.bb0f9cead7d21f1f.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/c55043601dba4680b450b38c4a416024.jpeg.0e9b5dd80b8e08b4.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/e80ada8c8098426cb2ec373c7b6671df.jpg.9e45149b11883275.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/425beecafa974fe1bb21a5bac54f50c3.jpg.447f3d1f325bb6c7.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/9ee5c44ffedc4815b369086d0369c2e9.jpg.04eefbd6a7057b03.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/a461e7d814464411ba457d2a3215f8a5.webp.601b535cc76130df.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/3227fff49dff4f579982608d82cf5bd4.jpg.6907e4b9a197b626.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/3468bc4fdf7c4e04ae425a0f190885fc.jpg.143c855cdf4381e9.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/4ca8387de4274d2ab368a5eff8087a83.png.e52daede8f48b480.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/8f41b27daad342a3861b0ac5ae2c73db.png.35c2ab6cb1331920.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/8b41ad8f5009449eae83a6ea6b91f040.jpeg.93ff7297e6ed57d7.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/03e1d4b828864463b03883608e7c6da5.png.f80c852c4cc1362c.320.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [18/Nov/2026 04:34:30] "[36mGET /static/img/products/_responsive/fe773c176e9b47ddb2bba3b22443c047.png.0bae28a08ac5989d.320.webp HTTP/1.1[0m" 304 -

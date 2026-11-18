@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ category.latin_name or category.name }} · Железария Дианабад{% endblock %}
+{% block title %}{{ category.name }} · Железария Дианабад{% endblock %}
 
 {% block content %}
 <h1 class="page-title category-page-title">
@@ -8,7 +8,7 @@
     {% else %}
         <span>{{ category_icons.get(category.name, '🧰') }}</span>
     {% endif %}
-    {{ category.latin_name or category.name }}
+    {{ category.name }}
 </h1>
 
 <form class="inline-search list-toolbar" method="get">
